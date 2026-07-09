@@ -35,15 +35,18 @@ UN TÉLÉCHARGEUR VIDÉO 4K SIMPLE, AVEC UNE INTERFACE GRAPHIQUE.
    -> Une fenêtre Terminal s'ouvre aussi : c'est normal,
       c'est là que les vidéos se téléchargent.
 
-2. Dans l'interface, onglet "Télécharger" :
-   - Collez vos liens YouTube (un par ligne)
-   - Choisissez un profil (par défaut : Compatibilité maximale)
-   - Cliquez sur "Copier la commande"
+2. Dans l'interface :
+   - Onglet "Télécharger" : collez vos liens YouTube, choisissez
+     un profil puis cliquez sur "Copier la commande".
+   - Onglet "ffmpeg commandes" : indiquez un fichier source local,
+     choisissez un preset (MP4 compatible, MP4 HQ, MP3, HAP, HAP Q),
+     puis cliquez sur "Copier la commande".
 
 3. Cliquez dans la fenêtre Terminal, collez (Ctrl+Shift+V),
    puis appuyez sur Entrée.
 
-4. La vidéo est enregistrée dans ce dossier.
+4. Les téléchargements arrivent dans ce dossier.
+   Les conversions FFmpeg utilisent le chemin de sortie indiqué.
 
 ----------------------------------------------------------------
  MISE À JOUR DES OUTILS
@@ -62,6 +65,8 @@ télécharge que le nécessaire :
 ----------------------------------------------------------------
 
 - FFmpeg est inclus : laissez le champ "FFmpeg" VIDE.
+- Les presets vidéo standards privilégient maintenant la compatibilité :
+  sortie MP4 en H.264 + AAC, plus fiable dans VLC et les lecteurs anciens.
 - Pour TOUT re-télécharger de zéro, relancez install.sh ;
   pour ne mettre à jour que le nécessaire, lancez update.sh.
 - Tout reste dans ce dossier, rien n'est installé ailleurs.
