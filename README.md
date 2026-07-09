@@ -8,11 +8,12 @@ Aucune ligne de commande à connaître : on colle ses liens, on sélectionne un 
 
 ## ✨ Fonctionnalités
 
-- 🛡️ **Compatibilité maximale (par défaut)** — profil **H.264 · AAC · MP4** sélectionné d'office : la vidéo se lit partout (mobiles, lecteurs anciens, logiciels de montage).
+- 🛡️ **Profils vidéo vraiment compatibles** — les presets standards sortent maintenant en **H.264 · AAC · MP4** avec ré-encodage de sécurité : lecture plus fiable dans VLC, QuickTime, TV, mobile et logiciels de montage.
 - 📥 **Téléchargement multi-URLs** — une ou plusieurs vidéos d'un coup (une URL par ligne).
 - 🌟 **Qualité au choix** — Ultime (4K/8K sans limite), 4K (2160p), 2K (1440p), Full HD (1080p).
 - 🎵 **Audio seul** — extraction MP3 en qualité maximale.
 - 🎛️ **Export VJ** — ré-encodage en codec **HAP** / **HAP Q** (`.mov`) lu nativement par Resolume Arena/Avenue et Alley.
+- 🎞️ **Onglet "ffmpeg commandes"** — conversion de fichiers locaux via des commandes prêtes à coller : MP4 universel, MP4 HQ, MP3, HAP, HAP Q.
 - 📚 **Playlists** — téléchargement complet avec sous-dossier par playlist.
 - 📁 **Rangement automatique** — les vidéos atterrissent dans `Téléchargements/`.
 - 🔌 **100 % portable** — yt-dlp, FFmpeg et Deno sont téléchargés dans un sous-dossier `bin/` ; rien n'est installé ailleurs sur le PC.
@@ -66,8 +67,13 @@ Le script **vérifie d'abord si des mises à jour sont disponibles** et ne tél�
    - Choisissez un **profil** (par défaut : *Compatibilité maximale*) et, si besoin, cochez **playlist**.
    - Cliquez sur **Copier la commande**.
    - *(Le champ **FFmpeg**, dans « Options avancées », reste vide : il est déjà inclus.)*
-3. Cliquez dans la fenêtre « Terminal », faites un **clic droit** (= coller), puis **Entrée**.
-4. La vidéo est enregistrée dans `dist/Téléchargements/`.
+3. Pour convertir un fichier local, basculez sur l'onglet **🎞️ ffmpeg commandes** :
+   - Renseignez le **fichier source**.
+   - Choisissez un **preset** de conversion (MP4 compatible, MP4 HQ, MP3, HAP, HAP Q).
+   - Ajustez éventuellement le **fichier de sortie** et le redimensionnement.
+   - Cliquez sur **Copier la commande**.
+4. Cliquez dans la fenêtre « Terminal », faites un **clic droit** (= coller), puis **Entrée**.
+5. Les téléchargements sont enregistrés dans `dist/Téléchargements/`. Les conversions FFmpeg utilisent le chemin de sortie indiqué dans la commande.
 
 ---
 
