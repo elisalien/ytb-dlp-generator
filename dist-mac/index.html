@@ -492,7 +492,7 @@
     }
 
     function ytDlpCompatArgs(maxHeight) {
-        const scaleFilter = maxHeight ? ` -vf "scale='if(gt(ih,${maxHeight}),-2,iw)':'if(gt(ih,${maxHeight}),${maxHeight},ih)'"` : "";
+        const scaleFilter = maxHeight ? ` -vf scale=-2:${maxHeight}:force_original_aspect_ratio=decrease` : "";
         return ` --recode-video mp4 --postprocessor-args "VideoConvertor:-c:v libx264 -preset medium -crf 18 -pix_fmt yuv420p -movflags +faststart${scaleFilter} -c:a aac -b:a 192k -ar 48000"`;
     }
 
