@@ -1,88 +1,57 @@
 ================================================================
-   yt-dlp Studio  -  Mode d'emploi (macOS)
+  yt-dlp Studio — Mode d'emploi (macOS)
 ================================================================
 
-UN TÉLÉCHARGEUR VIDÉO 4K SIMPLE, AVEC UNE INTERFACE GRAPHIQUE.
+Interface locale pour telecharger et convertir vos medias.
+Portable : tout reste dans ce dossier.
+Compatible Intel et Apple Silicon.
 
 ----------------------------------------------------------------
- INSTALLATION (à faire une seule fois)
+INSTALLATION (une seule fois)
 ----------------------------------------------------------------
 
-1. Ouvrez un Terminal (Cmd+Espace → "Terminal")
-
-2. Naviguez jusqu'au dossier dist-mac :
-      cd chemin/vers/dist-mac
-
-3. Rendez les scripts exécutables (une seule fois) :
-      chmod +x install.sh launch.sh update.sh
-
-4. Lancez l'installation :
-      bash install.sh
-   -> Il télécharge automatiquement les outils nécessaires
-      (yt-dlp, FFmpeg, Deno) dans le dossier "bin".
-      Deno est le moteur JavaScript requis par YouTube pour
-      récupérer les formats haute qualité (4K).
-   -> Une connexion internet est requise.
+1. Ouvrez Terminal (Cmd+Espace → Terminal)
+2. cd chemin/vers/dist-mac
+3. chmod +x install.sh launch.sh update.sh
+4. bash install.sh
 
 ----------------------------------------------------------------
- UTILISATION
+UTILISATION
 ----------------------------------------------------------------
 
-1. Double-cliquez sur launch.sh
-   (ou dans le Terminal : bash launch.sh)
-   -> L'interface s'ouvre dans votre navigateur.
-   -> Une fenêtre Terminal s'ouvre aussi : c'est normal,
-      c'est là que les vidéos se téléchargent.
-
+1. Double-cliquez sur launch.sh (ou : bash launch.sh)
 2. Dans l'interface :
-   - Onglet "Télécharger" : collez vos liens YouTube, choisissez
-     un profil puis cliquez sur "Copier la commande".
-   - Onglet "ffmpeg commandes" : indiquez un fichier source local,
-     choisissez un preset (MP4 compatible, MP4 HQ, MP3, HAP, HAP Q),
-     puis cliquez sur "Copier la commande".
+   - Telecharger : URLs + profil → Copier la commande
+   - ffmpeg commandes : fichier source + preset → Copier
+3. Collez dans le Terminal (Cmd+V), puis Entree
 
-3. Cliquez dans la fenêtre Terminal, collez (Cmd+V),
-   puis appuyez sur Entrée.
-
-4. Les téléchargements arrivent dans ce dossier.
-   Les conversions FFmpeg utilisent le chemin de sortie indiqué.
+Telechargements → dossier Téléchargements/
+Conversions → chemin indique dans la commande
 
 ----------------------------------------------------------------
- MISE À JOUR DES OUTILS
+MISE A JOUR
 ----------------------------------------------------------------
 
-Dans le Terminal :  bash update.sh
-Le script vérifie d'abord si des mises à jour existent et ne
-télécharge que le nécessaire :
- - yt-dlp : auto-mise à jour (l'outil à actualiser le plus souvent,
-            car YouTube change souvent).
- - Deno   : auto-mise à jour.
- - FFmpeg : re-téléchargé UNIQUEMENT si une version plus récente existe.
+bash update.sh  — met a jour uniquement ce qui est obsolete
+bash install.sh — reinstalle tout depuis zero
 
 ----------------------------------------------------------------
- NOTES
+NOTES
 ----------------------------------------------------------------
 
-- FFmpeg est inclus : laissez le champ "FFmpeg" VIDE.
-- Les presets vidéo standards privilégient maintenant la compatibilité :
-  sortie MP4 en H.264 + AAC, plus fiable dans VLC et les lecteurs anciens.
-- Pour TOUT re-télécharger de zéro, relancez install.sh ;
-  pour ne mettre à jour que le nécessaire, lancez update.sh.
-- Tout reste dans ce dossier, rien n'est installé ailleurs.
-- Compatible Intel (x86_64) et Apple Silicon (M1/M2/M3).
+- Laissez le champ FFmpeg vide (deja inclus)
+- Presets video standards : H.264 + AAC + MP4 (compatible VLC)
+- Presets ffmpeg : MP4, MP3, HAP / HAP Q
 
 ----------------------------------------------------------------
- CRÉDITS / LICENCES
+CREDITS
 ----------------------------------------------------------------
 
-Cet outil télécharge et utilise des logiciels tiers gratuits :
-- yt-dlp  : https://github.com/yt-dlp/yt-dlp        (Unlicense)
-- FFmpeg  : https://evermeet.cx/ffmpeg               (GPL/LGPL)
-- Deno    : https://deno.com                         (MIT)
+yt-dlp  https://github.com/yt-dlp/yt-dlp   (Unlicense)
+FFmpeg  https://evermeet.cx/ffmpeg         (GPL/LGPL)
+Deno    https://deno.com                   (MIT)
 
-Ces logiciels ne sont PAS redistribués ici : ils sont téléchargés
-par install.sh depuis leurs sites officiels.
+Telecharges a l'installation, non redistribues ici.
+
+2026 — Elisalien pour Lucien
 ================================================================
-
-2026 - Elisalien
-pour Lucien

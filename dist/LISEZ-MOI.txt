@@ -1,79 +1,56 @@
 ================================================================
-   yt-dlp Studio  -  Mode d'emploi
+  yt-dlp Studio — Mode d'emploi (Windows)
 ================================================================
 
-UN TELECHARGEUR VIDEO 4K SIMPLE, AVEC UNE INTERFACE GRAPHIQUE.
+Interface locale pour telecharger et convertir vos medias.
+Portable : tout reste dans ce dossier.
 
 ----------------------------------------------------------------
- INSTALLATION (a faire une seule fois)
+INSTALLATION (une seule fois)
 ----------------------------------------------------------------
 
-1. Double-cliquez sur  install.bat
-   -> Il telecharge automatiquement les outils necessaires
-      (yt-dlp, FFmpeg, Deno) dans le dossier "bin".
-      Deno est le moteur JavaScript requis par YouTube pour
-      recuperer les formats haute qualite (4K).
-   -> Une connexion internet est requise.
-   -> Si Windows SmartScreen apparait : "Informations complementaires"
-      puis "Executer quand meme".
+1. Double-cliquez sur install.bat
+2. Attendez le telechargement de yt-dlp, FFmpeg et Deno
+3. Si SmartScreen apparait :
+   Informations complementaires → Executer quand meme
 
 ----------------------------------------------------------------
- UTILISATION
+UTILISATION
 ----------------------------------------------------------------
 
-1. Double-cliquez sur  launch.bat
-   -> L'interface s'ouvre dans votre navigateur.
-   -> Une fenetre noire "Terminal" s'ouvre aussi : c'est normal,
-      c'est la que les videos se telechargent.
-
+1. Double-cliquez sur launch.bat
 2. Dans l'interface :
-   - Onglet "Telecharger" : collez vos liens YouTube, choisissez
-     un profil puis cliquez sur "Copier la commande".
-   - Onglet "ffmpeg commandes" : indiquez un fichier source local,
-     choisissez un preset (MP4 compatible, MP4 HQ, MP3, HAP, HAP Q),
-     puis cliquez sur "Copier la commande".
+   - Telecharger : URLs + profil → Copier la commande
+   - ffmpeg commandes : fichier source + preset → Copier
+3. Collez dans le Terminal (clic droit), puis Entree
 
-3. Cliquez dans la fenetre noire "Terminal", faites un CLIC DROIT
-   (ce qui colle la commande), puis appuyez sur ENTREE.
-
-4. Les telechargements arrivent dans ce dossier.
-   Les conversions FFmpeg utilisent le chemin de sortie indique.
+Telechargements → dossier Téléchargements/
+Conversions → chemin indique dans la commande
 
 ----------------------------------------------------------------
- MISE A JOUR DES OUTILS
+MISE A JOUR
 ----------------------------------------------------------------
 
-Double-cliquez sur  update.bat  quand vous le souhaitez.
-Le script verifie d'abord si des mises a jour existent et ne
-telecharge que le necessaire :
- - yt-dlp : auto-mise a jour (l'outil a actualiser le plus souvent,
-            car YouTube change souvent).
- - Deno   : auto-mise a jour.
- - FFmpeg : re-telecharge UNIQUEMENT si une version plus recente existe.
+update.bat  — met a jour uniquement ce qui est obsolete
+install.bat — reinstalle tout depuis zero
 
 ----------------------------------------------------------------
- NOTES
+NOTES
 ----------------------------------------------------------------
 
-- FFmpeg est inclus : laissez le champ "FFmpeg" VIDE dans l'interface.
-- Les presets video standards privilegient maintenant la compatibilite :
-  sortie MP4 en H.264 + AAC, plus fiable dans VLC et les lecteurs anciens.
-- Pour TOUT re-telecharger de zero, relancez install.bat ;
-  pour ne mettre a jour que le necessaire, lancez update.bat.
-- Tout reste dans ce dossier, rien n'est installe ailleurs sur le PC.
+- Laissez le champ FFmpeg vide (deja inclus)
+- Presets video standards : H.264 + AAC + MP4 (compatible VLC)
+- Presets ffmpeg : MP4, MP3, HAP / HAP Q
 
 ----------------------------------------------------------------
- CREDITS / LICENCES
+CREDITS
 ----------------------------------------------------------------
 
-Cet outil telecharge et utilise des logiciels tiers gratuits :
-- yt-dlp  : https://github.com/yt-dlp/yt-dlp        (Unlicense)
-- FFmpeg  : https://ffmpeg.org                      (GPL/LGPL)
-- Deno    : https://deno.com                        (MIT)
+yt-dlp  https://github.com/yt-dlp/yt-dlp   (Unlicense)
+FFmpeg  https://ffmpeg.org                 (GPL/LGPL)
+Deno    https://deno.com                   (MIT)
 
-Ces logiciels ne sont PAS redistribues ici : ils sont telecharges
-par install.bat depuis leurs sites officiels.
+Telecharges a l'installation, non redistribues ici.
+
+2026 — Elisalien pour Lucien
 ================================================================
-
-2026 - Elisalien
-pour Lucien
