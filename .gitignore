@@ -1,0 +1,16 @@
+# Binaires telecharges par install.bat / update.bat (~320 Mo)
+bin/
+
+# Sorties
+Téléchargements/
+Telechargements/
+*.mp4
+*.mov
+*.mp3
+*.webm
+
+# Outillage
+graphify-out/
+
+# Sauvegardes locales
+*.bak
