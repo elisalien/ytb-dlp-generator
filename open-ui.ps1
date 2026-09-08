@@ -1,4 +1,6 @@
 # Ouvre index.html dans un vrai navigateur (pas l'editeur associe aux .html).
+# Firefox est prioritaire : l'app genere des commandes avec
+# --cookies-from-browser firefox, autant que l'UI et les cookies soient au meme endroit.
 $ErrorActionPreference = 'SilentlyContinue'
 $page = Join-Path $PSScriptRoot 'index.html'
 if (-not (Test-Path -LiteralPath $page)) {
@@ -8,19 +10,36 @@ if (-not (Test-Path -LiteralPath $page)) {
 $url = ([Uri]$page).AbsoluteUri
 
 $exe = $null
-$progId = (Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice').ProgId
-if ($progId) {
-    $cmd = (Get-ItemProperty "Registry::HKEY_CLASSES_ROOT\$progId\shell\open\command").'(default)'
-    if ($cmd -match '"([^"]+\.exe)"') { $exe = $Matches[1] }
+
+# 1) Firefox en priorite
+$firefoxPaths = @(
+    "$env:ProgramFiles\Mozilla Firefox\firefox.exe",
+    "${env:ProgramFiles(x86)}\Mozilla Firefox\firefox.exe",
+    "$env:LocalAppData\Mozilla Firefox\firefox.exe"
+)
+foreach ($cand in $firefoxPaths) {
+    if (Test-Path -LiteralPath $cand) { $exe = $cand; break }
 }
 
-if (-not ($exe -and (Test-Path -LiteralPath $exe))) {
+# 2) Sinon : navigateur par defaut du systeme
+if (-not $exe) {
+    $progId = (Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice').ProgId
+    if ($progId) {
+        $cmd = (Get-ItemProperty "Registry::HKEY_CLASSES_ROOT\$progId\shell\open\command").'(default)'
+        if ($cmd -match '"([^"]+\.exe)"') {
+            $candidate = $Matches[1]
+            if (Test-Path -LiteralPath $candidate) { $exe = $candidate }
+        }
+    }
+}
+
+# 3) Sinon : autres navigateurs connus
+if (-not $exe) {
     $candidates = @(
         "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe",
         "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe",
         "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
-        "$env:LocalAppData\Google\Chrome\Application\chrome.exe",
-        "$env:ProgramFiles\Mozilla Firefox\firefox.exe"
+        "$env:LocalAppData\Google\Chrome\Application\chrome.exe"
     )
     foreach ($cand in $candidates) {
         if (Test-Path -LiteralPath $cand) { $exe = $cand; break }

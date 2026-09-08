@@ -1,6 +1,9 @@
 # Met a jour yt-dlp (nightly), Deno et FFmpeg dans .\bin
 # Telecharge depuis les depots officiels. Ne s'appuie pas sur --update-to
 # (le self-updater Windows rate souvent le switch stable -> nightly).
+# -Auto : appele au lancement du raccourci, ne verifie qu'une fois toutes les 12h.
+param([switch]$Auto)
+
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $false
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -70,6 +73,18 @@ function Download-File([string]$url, [string]$dest) {
 }
 
 if (-not (Test-Path -LiteralPath $Bin)) { New-Item -ItemType Directory -Path $Bin | Out-Null }
+
+$Stamp = Join-Path $Bin '.last-update'
+if ($Auto -and (Test-Path -LiteralPath $Stamp)) {
+    $age = (Get-Date) - (Get-Item -LiteralPath $Stamp).LastWriteTime
+    if ($age.TotalHours -lt 12) {
+        Write-Host ''
+        Write-Host ('   Outils verifies il y a ' + [int]$age.TotalMinutes + ' min - check ignore.')
+        Write-Host '   (Pour forcer maintenant : double-clic sur update.bat)'
+        Write-Host ''
+        exit 0
+    }
+}
 
 Write-Host '============================================================'
 Write-Host '   yt-dlp Studio - Mise a jour des outils'
@@ -205,6 +220,7 @@ if ($failed) {
     Write-Host '============================================================'
     exit 1
 }
+Set-Content -LiteralPath $Stamp -Value (Get-Date -Format o) -Encoding ascii -ErrorAction SilentlyContinue
 Write-Host '   Mise a jour terminee.'
 Write-Host '============================================================'
 exit 0
