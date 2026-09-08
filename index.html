@@ -227,12 +227,12 @@
         <summary>Options avancées</summary>
         <div class="inner">
             <label class="checkbox-card" style="margin-bottom:8px">
-                <input type="checkbox" id="cookies" onchange="generate()">
-                <span>🍪 Cookies navigateur — si YouTube renvoie 403 / bot / playlist privée</span>
+                <input type="checkbox" id="cookies" onchange="generate()" checked>
+                <span>🍪 Cookies navigateur — nécessaire depuis sept. 2026 (403 / bot / playlist privée)</span>
             </label>
             <label for="cookiesBrowser">Navigateur des cookies</label>
             <select id="cookiesBrowser" onchange="generate()" style="margin-bottom:12px">
-                <option value="firefox">Firefox</option>
+                <option value="firefox">Firefox (recommandé)</option>
                 <option value="chrome">Chrome</option>
                 <option value="edge">Edge</option>
                 <option value="brave">Brave</option>
@@ -240,7 +240,7 @@
                 <option value="opera">Opera</option>
                 <option value="vivaldi">Vivaldi</option>
             </select>
-            <div class="hint">Utilise les cookies du navigateur où vous êtes connecté à YouTube. Requis pour les playlists privées et en cas de 403 / détection bot. Fermez les onglets YouTube inutiles pour éviter que le cookie soit reverrouillé.</div>
+            <div class="hint">Utilise les cookies du navigateur où vous êtes connecté à YouTube. <b>À laisser coché</b> : sans cookies, YouTube ne renvoie plus que des flux DRM ou un 403. Fermez les onglets YouTube inutiles pour éviter que le cookie soit reverrouillé. <b>Firefox est le choix fiable sous Windows</b> — Chrome, Edge et Brave chiffrent leurs cookies (App-Bound Encryption) et ne sont plus lisibles par yt-dlp.</div>
             <label for="ffmpeg" style="margin-top:4px">Chemin vers FFmpeg <span class="soft">(facultatif)</span></label>
             <input type="text" id="ffmpeg" placeholder="Laissez vide — FFmpeg est déjà inclus" oninput="generate()">
             <div class="hint">Inutile en temps normal : <code>launch</code> ajoute déjà FFmpeg au PATH. À renseigner seulement si vous utilisez un FFmpeg externe.</div>
@@ -313,11 +313,17 @@
         return p ? ` --ffmpeg-location "${p}"` : "";
     }
 
-    // Anti-403 YouTube : Deno pour les challenges JS, client fiable, retries,
+    // Anti-403 YouTube : Deno pour les challenges JS, clients fiables, retries,
     // et evite AV1 (format 399) qui se fait souvent couper en plein download.
+    //
+    // Sept. 2026 : `default` retombe sur visionos + android_vr, or ces deux clients
+    // exigent desormais un GVS PO token — on n'obtient plus que le format 18 (360p),
+    // qui se prend lui-meme un 403 (yt-dlp#17348, yt-dlp#17456). Le client `tv` est
+    // le seul qui marche encore sans PO token, mais il renvoie des flux DRM tant
+    // qu'on ne lui passe pas de cookies : d'ou la case Cookies cochee par defaut.
     function youtubeRobustArgs() {
         let a = ` --js-runtimes deno`;
-        a += ` --extractor-args "youtube:player_client=default,-android_sdkless"`;
+        a += ` --extractor-args "youtube:player_client=tv,default,-android_vr,-visionos"`;
         a += ` --retries 10 --fragment-retries 10 --retry-sleep "fragment:linear=1:8"`;
         if (document.getElementById("cookies").checked) {
             const br = document.getElementById("cookiesBrowser").value;
