@@ -1,0 +1,57 @@
+================================================================
+  yt-dlp Studio — Mode d'emploi (macOS)
+================================================================
+
+Interface locale pour telecharger et convertir vos medias.
+Portable : tout reste dans ce dossier.
+Compatible Intel et Apple Silicon.
+
+----------------------------------------------------------------
+INSTALLATION (une seule fois)
+----------------------------------------------------------------
+
+1. Ouvrez Terminal (Cmd+Espace → Terminal)
+2. cd chemin/vers/dist-mac
+3. chmod +x install.sh launch.sh update.sh
+4. bash install.sh
+
+----------------------------------------------------------------
+UTILISATION
+----------------------------------------------------------------
+
+1. Double-cliquez sur launch.sh (ou : bash launch.sh)
+2. Dans l'interface :
+   - Telecharger : URLs + profil → Copier la commande
+   - ffmpeg commandes : fichier source + preset → Copier
+3. Collez dans le Terminal (Cmd+V), puis Entree
+
+Telechargements → dossier Téléchargements/
+Conversions → chemin indique dans la commande
+
+----------------------------------------------------------------
+MISE A JOUR
+----------------------------------------------------------------
+
+bash update.sh  — met a jour uniquement ce qui est obsolete
+bash install.sh — reinstalle tout depuis zero
+
+----------------------------------------------------------------
+NOTES
+----------------------------------------------------------------
+
+- Laissez le champ FFmpeg vide (deja inclus)
+- Presets video standards : H.264 + AAC + MP4 (compatible VLC)
+- Presets ffmpeg : MP4, MP3, HAP / HAP Q
+
+----------------------------------------------------------------
+CREDITS
+----------------------------------------------------------------
+
+yt-dlp  https://github.com/yt-dlp/yt-dlp   (Unlicense)
+FFmpeg  https://evermeet.cx/ffmpeg         (GPL/LGPL)
+Deno    https://deno.com                   (MIT)
+
+Telecharges a l'installation, non redistribues ici.
+
+2026 — Elisalien pour Lucien
+================================================================

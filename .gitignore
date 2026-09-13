@@ -1,22 +1,22 @@
-# Binaires telecharges par install.bat / update.bat (~320 Mo)
+# Binaires telecharges par install.bat / update.bat
 bin/
+*.exe
 
-# Sorties
-Téléchargements/
-Telechargements/
+# Sorties et medias de test
+T*l*chargements/
 *.mp4
 *.mov
-*.mp3
+*.mkv
 *.webm
+*.mp3
+*.m4a
+*.wav
+*.zip
 
-# Outillage
-graphify-out/
-
-# Reglages locaux (dossier de destination, profil...)
+# Reglages et raccourci locaux (create-shortcut.bat recree le .lnk)
 settings.json
-
-# Sauvegardes locales
-*.bak
-
-# Raccourci local (chemin absolu) : create-shortcut.bat le recree
 *.lnk
+
+# Outillage / sauvegardes
+graphify-out/
+*.bak

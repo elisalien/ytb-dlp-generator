@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tag de version à publier (ex : v1.5)'
+        required: true
+        default: 'v1.5'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Application Windows : fichiers a la racine du depot.
+      - name: Package Windows
+        run: |
+          zip -r yt-dlp-4k-windows.zip \
+            index.html server.ps1 launch.bat install.bat update.bat update.ps1 \
+            terminal.bat extract-frames.bat create-shortcut.bat create-shortcut.ps1 \
+            LISEZ-MOI.txt assets
+
+      - name: Package macOS
+        run: cd dist-mac && zip -r ../yt-dlp-4k-mac.zip .
+
+      - name: Package Linux
+        run: cd dist-linux && zip -r ../yt-dlp-4k-linux.zip .
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: "yt-dlp Studio ${{ steps.ver.outputs.tag }}"
+          generate_release_notes: true
+          files: |
+            yt-dlp-4k-windows.zip
+            yt-dlp-4k-mac.zip
+            yt-dlp-4k-linux.zip
