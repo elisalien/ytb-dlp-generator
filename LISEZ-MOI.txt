@@ -1,89 +1,88 @@
 ================================================================
-   yt-dlp Studio  -  Mode d'emploi
+   yt-dlp Studio  -  Mode d'emploi (Windows)
 ================================================================
 
-UN TELECHARGEUR VIDEO 4K SIMPLE, AVEC UNE INTERFACE GRAPHIQUE.
+Telechargeur video 4K / 8K et convertisseur local, avec une
+interface dans le navigateur. Portable : tout reste dans ce dossier.
 
 ----------------------------------------------------------------
- INSTALLATION (a faire une seule fois)
+ INSTALLATION (une seule fois)
 ----------------------------------------------------------------
 
 1. Double-cliquez sur  install.bat
-   -> Il telecharge automatiquement les outils necessaires
-      (yt-dlp, FFmpeg, Deno) dans le dossier "bin".
-      Deno est le moteur JavaScript requis par YouTube pour
-      recuperer les formats haute qualite (4K).
-   -> Une connexion internet est requise.
+   -> Il telecharge yt-dlp, FFmpeg et Deno dans le dossier "bin".
+      Deno est le moteur JavaScript requis par YouTube.
    -> Si Windows SmartScreen apparait : "Informations complementaires"
       puis "Executer quand meme".
+2. Facultatif : create-shortcut.bat cree le raccourci "yt-dlp Studio"
+   sur le Bureau (clic droit -> Epingler a la barre des taches).
 
 ----------------------------------------------------------------
  UTILISATION
 ----------------------------------------------------------------
 
-1. Double-cliquez sur  launch.bat
-   OU sur le raccourci  "yt-dlp Studio"  (Bureau / dossier du projet).
-   Pour l'epingler a la barre des taches : clic droit sur le raccourci
-   -> "Epingler a la barre des taches".
-   -> L'interface s'ouvre dans votre navigateur.
-   -> Une fenetre "yt-dlp Studio - serveur" s'ouvre REDUITE dans la
-      barre des taches : c'est elle qui telecharge. Laissez-la ouverte
-      (la fermer arrete les telechargements).
+1. Double-cliquez sur  launch.bat  (ou le raccourci).
+   -> L'interface s'ouvre dans le navigateur (Firefox en priorite).
+   -> Une fenetre "yt-dlp Studio - serveur" s'ouvre REDUITE : c'est
+      elle qui travaille. La fermer arrete les telechargements.
 
-2. Dans l'interface :
-   - Collez vos liens (un par ligne), bouton "Coller", ou GLISSEZ
-     un lien / un onglet directement sur la fenetre.
-   - Choisissez un profil (par defaut : Compatibilite maximale)
-     Profil "Frames" : cree un dossier par video avec toutes les
-     images PNG (frame_00001.png, ...) — attention au volume disque.
-   - Dossier de destination : bouton "Choisir..." (memorise).
-   - Cliquez sur "Telecharger" (ou Ctrl + Entree). C'est tout :
-     la progression s'affiche dans la "File d'attente".
+2. Onglet TELECHARGER
+   - Collez vos liens (un par ligne), ou glissez un lien / un onglet
+     sur le panneau.
+   - Choisissez un format : Compatible (par defaut), Ultime, 4K, 2K,
+     Full HD, HAP, HAP Q, MP3 ou Frames (une image PNG par frame).
+   - Destination : bouton "Choisir..." (memorise).
+   - Cliquez sur "Telecharger" (ou Ctrl + Entree).
 
-3. Rangement automatique :
-   - Un lien de playlist ou de chaine  -> dossier au nom de la playlist,
+   Rangement automatique :
+   - Lien de playlist ou de chaine -> dossier au nom de la playlist,
      fichiers numerotes dans l'ordre.
-   - Plusieurs liens colles d'un coup  -> sous-dossier "Lot <date heure>"
-     (nom modifiable, option decochable).
-   - Un seul lien                      -> directement dans la destination.
+   - Plusieurs liens d'un coup     -> sous-dossier "Lot <date heure>".
+   - Un seul lien                  -> directement dans la destination.
 
-4. Sans meme copier le lien : Options avancees -> glissez le bouton
-   "yt-dlp Studio" dans la barre de favoris du navigateur. Sur une page
-   YouTube, cliquez ce favori : le lien arrive dans l'interface
-   (option : telechargement immediat).
+3. Onglet CONVERTIR
+   - Choisissez un fichier sur le PC.
+   - Preregage : MP4 compatible, MP4 HQ, HAP, HAP Q ou MP3.
+   - Largeur maximale facultative (reduit seulement).
+   - Le fichier produit est cree a cote de la source
+     (ex. clip-compatible.mp4, clip-hap.mov).
 
-Mode manuel (ancien fonctionnement) : Options avancees -> "Commande
-equivalente" -> Copier, puis collez-la dans terminal.bat.
+4. La file d'attente affiche la progression, le temps restant,
+   le journal et un bouton pour ouvrir le dossier.
+
+5. Favori navigateur : Options avancees -> glissez le bouton
+   "yt-dlp Studio" dans la barre de favoris. Sur une page video,
+   cliquez-le : le lien arrive dans l'interface.
+
+Mode manuel : Options avancees -> "Commande equivalente" -> Copier,
+puis collez-la dans terminal.bat.
 
 ----------------------------------------------------------------
  MISE A JOUR DES OUTILS
 ----------------------------------------------------------------
 
-Double-cliquez sur  update.bat  quand vous le souhaitez.
-Le script verifie d'abord si des mises a jour existent et ne
-telecharge que le necessaire :
- - yt-dlp : canal nightly (suit les changements YouTube / erreurs 403).
- - Si 403 Forbidden ou "caller does not have permission" (playlist
-   privee / detection bot) : cochez "Cookies navigateur" dans Options
-   avancees et choisissez votre navigateur (celui connecte a YouTube),
-   puis regenerez la commande. Vous pouvez aussi relancer update.bat.
+Automatique au lancement (au plus une fois toutes les 12 h).
+Pour forcer : double-cliquez sur  update.bat.
+ - yt-dlp : canal nightly (suit les changements de YouTube).
  - Deno   : auto-mise a jour.
  - FFmpeg : re-telecharge UNIQUEMENT si une version plus recente existe.
+
+Erreur 403 ou "caller does not have permission" : laissez "Cookies
+du navigateur" active (Options avancees), avec Firefox connecte a
+YouTube, puis relancez update.bat.
 
 ----------------------------------------------------------------
  NOTES
 ----------------------------------------------------------------
 
-- FFmpeg est inclus : laissez le champ "FFmpeg" VIDE dans l'interface.
-- Pour TOUT re-telecharger de zero, relancez install.bat ;
-  pour ne mettre a jour que le necessaire, lancez update.bat.
-- Tout reste dans ce dossier, rien n'est installe ailleurs sur le PC.
+- FFmpeg est inclus : laissez le champ "Chemin FFmpeg" vide.
+- Rien n'est installe ailleurs sur le PC.
+- Usage personnel et legal uniquement. Respectez le droit d'auteur.
 
 ----------------------------------------------------------------
  CREDITS / LICENCES
 ----------------------------------------------------------------
 
-Cet outil telecharge et utilise des logiciels tiers gratuits :
 - yt-dlp  : https://github.com/yt-dlp/yt-dlp        (Unlicense)
 - FFmpeg  : https://ffmpeg.org                      (GPL/LGPL)
 - Deno    : https://deno.com                        (MIT)

@@ -17,3 +17,6 @@ settings.json
 
 # Sauvegardes locales
 *.bak
+
+# Raccourci local (chemin absolu) : create-shortcut.bat le recree
+*.lnk

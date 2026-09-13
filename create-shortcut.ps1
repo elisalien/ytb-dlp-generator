@@ -21,7 +21,7 @@ function New-StudioShortcut([string]$path) {
     $sc.Arguments = "/c `"$launch`""
     $sc.WorkingDirectory = $root
     $sc.IconLocation = "$ico,0"
-    $sc.Description = 'yt-dlp Studio — telechargeur video 4K'
+    $sc.Description = 'yt-dlp Studio - telechargeur et convertisseur video'
     $sc.WindowStyle = 7
     $sc.Save()
     Write-Host "OK  $path"

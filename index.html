@@ -4,473 +4,494 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="studio-token" content="__STUDIO_TOKEN__">
-    <title>yt-dlp · Studio</title>
+    <title>yt-dlp Studio</title>
     <style>
+        /* Pupitre vidéo : graphite, texte os, trois voyants (tally) qui ont un sens.
+           Rouge = armé / en cours, vert = terminé, ambre = attente ou attention.
+           Polices système uniquement : l'app reste 100 % locale. */
         :root {
-            --accent: #38bdf8;
-            --accent-2: #818cf8;
-            --accent-soft: rgba(56, 189, 248, 0.16);
-            --ok: #34d399;
-            --warn: #fcd34d;
-            --err: #f87171;
-            --text: #eef2f9;
-            --dim: #9aa7bd;
-            --faint: #5f6b80;
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-2: rgba(255, 255, 255, 0.035);
-            --border: rgba(255, 255, 255, 0.10);
-            --field: rgba(8, 13, 26, 0.55);
-            --radius: 18px;
+            --ground: #111215;
+            --panel: #191a1f;
+            --raised: #22242a;
+            --line: #2c2f36;
+            --line-2: #3b3f48;
+            --bone: #ebe7de;
+            --dim: #a3a095;
+            --faint: #75726a;
+            --rec: #ff453a;
+            --rec-soft: rgba(255, 69, 58, 0.13);
+            --pgm: #30d158;
+            --amber: #ffb020;
+            --display: "Bahnschrift SemiCondensed", Bahnschrift, "DIN Alternate", "Roboto Condensed", "Arial Narrow", sans-serif;
+            --body: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+            --mono: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+            --r: 6px;
+            color-scheme: dark;
         }
         * { box-sizing: border-box; }
         [hidden] { display: none !important; }
-
-        html, body { min-height: 100%; }
         body {
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-            color: var(--text);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-            margin: 0;
-            padding: 28px 18px 40px;
-            background: #05080f;
-            position: relative;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
+            margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+            background: var(--ground); color: var(--bone);
+            font: 14px/1.5 var(--body); -webkit-font-smoothing: antialiased;
         }
+        button, input, select, textarea { font: inherit; color: inherit; }
+        code { font-family: var(--mono); font-size: 0.92em; }
+        :focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 
-        /* Ambient light — pure CSS, no external assets, very light */
-        body::before, body::after {
-            content: "";
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(120px);
-            z-index: 0;
-            opacity: 0.5;
-            pointer-events: none;
+        /* ---------- En-tête ---------- */
+        .top {
+            position: sticky; top: 0; z-index: 5;
+            display: flex; align-items: center; gap: 24px;
+            padding: 12px 24px; background: var(--panel); border-bottom: 1px solid var(--line);
         }
-        body::before {
-            width: 460px; height: 460px;
-            background: radial-gradient(circle, #0ea5e9, transparent 65%);
-            top: -150px; left: -110px;
+        .brand { display: flex; align-items: center; gap: 10px; }
+        .brand-mark { width: 12px; height: 12px; border-radius: 2px; background: var(--rec); box-shadow: 0 0 0 3px var(--rec-soft); }
+        .wordmark { font-family: var(--display); font-size: 20px; letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap; }
+        .wordmark b { font-weight: 700; }
+        .tabs { display: flex; gap: 2px; padding: 3px; background: var(--ground); border: 1px solid var(--line); border-radius: var(--r); }
+        .tab {
+            padding: 6px 16px; border: 0; border-radius: 4px; background: none; cursor: pointer;
+            font-family: var(--display); font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim);
         }
-        body::after {
-            width: 500px; height: 500px;
-            background: radial-gradient(circle, #6366f1, transparent 65%);
-            bottom: -190px; right: -130px;
+        .tab:hover { color: var(--bone); }
+        .tab[aria-selected="true"] { background: var(--raised); color: var(--bone); box-shadow: inset 0 -2px 0 var(--rec); }
+        .status {
+            margin-left: auto; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+            font-family: var(--display); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim);
         }
-
-        .card {
-            position: relative;
-            z-index: 1;
-            background: var(--glass);
-            backdrop-filter: blur(22px) saturate(150%);
-            -webkit-backdrop-filter: blur(22px) saturate(150%);
-            padding: 2rem 1.9rem;
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.07);
-            width: 100%;
-            max-width: 660px;
-        }
-        .card.drop { border-color: var(--accent); box-shadow: 0 0 0 3.5px var(--accent-soft), 0 20px 60px rgba(0,0,0,.5); }
-
-        .credit {
-            display: flex; align-items: center; gap: 7px;
-            margin-bottom: 14px;
-            font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em;
-            text-transform: uppercase; color: var(--faint);
-        }
-        .credit::before, .credit::after {
-            content: ""; height: 1px; flex: 1;
-            background: linear-gradient(90deg, transparent, var(--border), transparent);
-        }
-        .credit .heart { color: var(--accent); }
-
-        .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-        h1 {
-            font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em;
-            margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.5rem;
-        }
-        .subtitle { color: var(--dim); font-size: 0.85rem; margin: 0 0 1.5rem; }
-
-        .pill {
-            flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
-            font-size: 0.72rem; font-weight: 600; color: var(--dim);
-            padding: 5px 10px; border-radius: 99px; border: 1px solid var(--border); background: var(--glass-2);
-            margin-top: 4px;
-        }
-        .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
-        .pill.ok::before { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
-        .pill.busy::before { background: var(--warn); }
-        .pill.off { color: var(--err); }
-        .pill.off::before { background: var(--err); }
-
-        .group { margin-bottom: 1.1rem; }
-
-        label {
-            display: block; margin-bottom: 0.45rem; font-weight: 600; color: var(--dim);
-            font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em;
-        }
-        label .soft { text-transform: none; letter-spacing: 0; color: var(--faint); font-weight: 500; }
-        .label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-        .label-row label { margin-bottom: 0.45rem; }
-
-        input[type="text"], select, textarea {
-            width: 100%; padding: 12px 14px;
-            background: var(--field); border: 1px solid var(--border);
-            border-radius: 11px; font-size: 0.92rem; color: var(--text);
-            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-            font-family: inherit;
-        }
-        textarea { resize: vertical; min-height: 96px; line-height: 1.5; }
-        select {
-            appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 38px;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239aa7bd' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-position: right 14px center;
-        }
-        select option, select optgroup { background: #0d1424; color: var(--text); }
-        ::placeholder { color: var(--faint); }
-        input:focus, textarea:focus, select:focus {
-            border-color: var(--accent); outline: none;
-            box-shadow: 0 0 0 3.5px var(--accent-soft); background: rgba(8, 13, 26, 0.7);
-        }
-
-        .inline { display: flex; gap: 8px; }
-        .inline input { flex: 1; min-width: 0; }
-
-        .btn {
-            flex-shrink: 0; padding: 0 14px; min-height: 44px;
-            background: var(--glass); color: var(--text);
-            border: 1px solid var(--border); border-radius: 11px;
-            font: 600 0.84rem/1 inherit; cursor: pointer; white-space: nowrap;
-            transition: border-color 0.2s, background 0.2s;
-        }
-        .btn:hover { border-color: rgba(56, 189, 248, 0.45); background: rgba(56, 189, 248, 0.08); }
-        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-        .btn.small { min-height: 30px; padding: 0 10px; font-size: 0.76rem; border-radius: 8px; }
-        .link-btn {
-            background: none; border: none; color: var(--accent); cursor: pointer;
-            font: 600 0.74rem/1 inherit; padding: 2px 0;
-        }
-        .link-btn:hover { text-decoration: underline; }
-
-        .checkbox-card {
-            display: flex; align-items: center; gap: 11px; cursor: pointer;
-            padding: 12px 14px; background: var(--field); border: 1px solid var(--border);
-            border-radius: 11px; transition: border-color 0.2s;
-            text-transform: none; letter-spacing: 0; color: var(--text);
-        }
-        .checkbox-card:hover { border-color: rgba(56, 189, 248, 0.4); }
-        .checkbox-card input { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
-        .checkbox-card span { font-weight: 500; font-size: 0.88rem; }
-        .checks { display: grid; gap: 8px; }
-        .batch-name { margin-top: 8px; }
-
-        details {
-            margin-bottom: 1.1rem; border: 1px solid var(--border);
-            border-radius: 11px; background: var(--glass-2);
-        }
-        summary {
-            padding: 11px 14px; cursor: pointer; font-size: 0.8rem; font-weight: 600;
-            color: var(--dim); list-style: none; user-select: none;
-        }
-        summary::-webkit-details-marker { display: none; }
-        summary::before { content: "▸ "; color: var(--faint); }
-        details[open] summary::before { content: "▾ "; }
-        details .inner { padding: 0 14px 14px; }
-
-        .hint { font-size: 0.74rem; color: var(--faint); margin-top: 6px; line-height: 1.5; }
-        .hint b { color: var(--dim); }
-        code { font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace; font-size: 0.92em; }
-
-        /* Plan : ou va chaque lien */
-        .plan { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 5px; }
-        .plan li {
-            display: flex; gap: 8px; align-items: baseline;
-            font-size: 0.78rem; color: var(--dim); line-height: 1.45;
-        }
-        .plan li > span:first-child { white-space: nowrap; flex-shrink: 0; }
-        .plan li > span.bad:first-child { white-space: normal; }
-        .plan .arrow { color: var(--faint); flex-shrink: 0; }
-        .plan .path { color: var(--text); word-break: break-all; font-family: ui-monospace, Menlo, monospace; font-size: 0.74rem; }
-        .plan .bad { color: var(--warn); }
-
-        .result-box {
-            background: rgba(2, 6, 14, 0.6); color: #6ee7a8;
-            padding: 0.9rem 1rem; border-radius: 12px;
-            font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
-            word-break: break-all; font-size: 0.74rem; line-height: 1.6;
-            border: 1px solid var(--border); white-space: pre-wrap; max-height: 220px; overflow: auto;
-        }
-
-        .go-btn {
-            width: 100%; padding: 15px;
-            background: linear-gradient(135deg, var(--accent), #2563eb);
-            color: #fff; border: none; border-radius: 12px;
-            font-size: 0.96rem; font-weight: 700; cursor: pointer; margin-top: 0.3rem;
-            transition: transform 0.16s, filter 0.2s, box-shadow 0.2s;
-            box-shadow: 0 8px 22px rgba(37, 99, 235, 0.32); font-family: inherit;
-        }
-        .go-btn:hover { transform: translateY(-1px); filter: brightness(1.07); }
-        .go-btn:active { transform: none; }
-        .go-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; filter: none; box-shadow: none; }
-        .kbd { font-weight: 500; opacity: 0.7; font-size: 0.78rem; margin-left: 6px; }
+        .status i { width: 9px; height: 9px; border-radius: 50%; background: var(--faint); }
+        .status[data-state="ok"] i { background: var(--pgm); box-shadow: 0 0 8px rgba(48, 209, 88, 0.5); }
+        .status[data-state="busy"] i { background: var(--amber); }
+        .status[data-state="live"] i { background: var(--rec); box-shadow: 0 0 8px rgba(255, 69, 58, 0.6); animation: pulse 1.2s ease-in-out infinite; }
+        .status[data-state="off"] { color: var(--rec); }
+        .status[data-state="off"] i { background: var(--rec); }
+        @keyframes pulse { 50% { opacity: 0.3; } }
 
         .banner {
-            color: var(--warn); font-size: 0.8rem; margin-bottom: 1.1rem;
-            display: flex; gap: 8px; align-items: flex-start;
-            background: rgba(251, 191, 36, 0.07); padding: 11px 13px;
-            border-radius: 11px; border: 1px solid rgba(251, 191, 36, 0.2); line-height: 1.5;
+            width: calc(100% - 48px); max-width: 1232px; margin: 16px auto 0; padding: 10px 14px;
+            border: 1px solid rgba(255, 176, 32, 0.35); border-radius: var(--r);
+            background: rgba(255, 176, 32, 0.08); color: var(--amber); font-size: 13px;
         }
-        .banner.err { color: #fca5a5; background: rgba(248, 113, 113, 0.08); border-color: rgba(248, 113, 113, 0.25); }
+        .banner.err { border-color: rgba(255, 69, 58, 0.45); background: var(--rec-soft); color: #ff8a80; }
 
+        /* ---------- Plateau ---------- */
+        .deck {
+            flex: 1; width: 100%; max-width: 1280px; margin: 0 auto; padding: 24px;
+            display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px; align-items: start;
+        }
+        .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+        .panel.drop { border-color: var(--rec); box-shadow: 0 0 0 3px var(--rec-soft); }
+        .section { padding: 18px 22px; border-bottom: 1px solid var(--line); }
+        .eyebrow {
+            display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 10px;
+            font-family: var(--display); font-size: 12px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim);
+        }
+        .aside { font-family: var(--body); font-size: 12px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--faint); }
+        .hint { margin: 8px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--faint); }
+        .hint b { font-weight: 600; color: var(--dim); }
+
+        .field, textarea {
+            width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r);
+            background: var(--ground); color: var(--bone); transition: border-color 0.15s;
+        }
+        textarea { min-height: 112px; resize: vertical; font-family: var(--mono); font-size: 13px; line-height: 1.65; }
+        .field:hover, textarea:hover { border-color: var(--line-2); }
+        .field:focus, textarea:focus { outline: none; border-color: var(--amber); }
+        .path { font-family: var(--mono); font-size: 13px; }
+        ::placeholder { color: var(--faint); }
+        select.field {
+            appearance: none; cursor: pointer; padding-right: 34px;
+            background: var(--ground) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a3a095' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 12px center;
+        }
+        select option { background: var(--panel); }
+        .row { display: flex; gap: 6px; }
+        .row .field { flex: 1; min-width: 0; }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 14px;
+            border: 1px solid var(--line-2); border-radius: var(--r); background: var(--raised);
+            font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: border-color 0.15s;
+        }
+        .btn:hover { border-color: var(--dim); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn.small { min-height: 28px; padding: 0 10px; font-size: 12px; }
+        .btn.ghost { border-color: transparent; background: none; color: var(--dim); }
+        .btn.ghost:hover { color: var(--bone); }
+        .link {
+            padding: 0; border: 0; background: none; cursor: pointer;
+            font: 12px var(--body); letter-spacing: 0; text-transform: none;
+            color: var(--dim); text-decoration: underline; text-underline-offset: 3px;
+        }
+        .link:hover { color: var(--bone); }
+
+        /* Tuiles de format : la sélection « arme » la piste, comme sur une console. */
+        .tiles { display: grid; gap: 12px; }
+        .tile-group { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 10px; align-items: start; }
+        .tile-group > span {
+            padding-top: 11px; font-family: var(--display); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint);
+        }
+        .tile-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 6px; }
+        .tile { position: relative; display: block; cursor: pointer; }
+        .tile input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+        .tile span {
+            display: block; height: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--r);
+            background: var(--ground); transition: border-color 0.15s, background-color 0.15s;
+        }
+        .tile b { display: block; font-family: var(--display); font-size: 16px; font-weight: 600; letter-spacing: 0.02em; }
+        .tile small { display: block; font-size: 11.5px; line-height: 1.35; color: var(--faint); }
+        .tile:hover span { border-color: var(--line-2); }
+        .tile input:checked + span { border-color: var(--rec); background-color: var(--rec-soft); box-shadow: inset 3px 0 0 var(--rec); }
+        .tile input:checked + span small { color: var(--dim); }
+        .tile input:focus-visible + span { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+        .toggle { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; cursor: pointer; }
+        .toggle:first-of-type { margin-top: 8px; }
+        .toggle input {
+            appearance: none; position: relative; flex: none; width: 34px; height: 20px; margin: 1px 0 0;
+            border-radius: 10px; background: var(--line-2); cursor: pointer; transition: background-color 0.15s;
+        }
+        .toggle input::after {
+            content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%;
+            background: var(--bone); transition: transform 0.15s;
+        }
+        .toggle input:checked { background: var(--pgm); }
+        .toggle input:checked::after { transform: translateX(14px); background: var(--ground); }
+        .toggle small { display: block; font-size: 12px; color: var(--faint); }
+        #batchNameWrap { margin: 0 0 4px 46px; }
+
+        .plan { display: grid; gap: 4px; margin: 10px 0 0; padding: 0; list-style: none; font-size: 12.5px; }
+        .plan:empty { display: none; }
+        .plan li { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 8px; align-items: baseline; color: var(--dim); }
+        .plan .to { color: var(--faint); }
+        .plan .dest { font-family: var(--mono); font-size: 12px; color: var(--bone); word-break: break-all; }
+        .plan li.bad { display: block; color: var(--amber); }
+
+        details.adv { border-bottom: 1px solid var(--line); }
+        .adv > summary {
+            display: flex; align-items: center; gap: 10px; padding: 14px 22px; list-style: none; cursor: pointer; user-select: none;
+            font-family: var(--display); font-size: 12px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim);
+        }
+        .adv > summary::-webkit-details-marker { display: none; }
+        .adv > summary::before {
+            content: ""; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+            transform: rotate(-45deg); transition: transform 0.15s;
+        }
+        .adv[open] > summary::before { transform: rotate(45deg); }
+        .adv > summary:hover { color: var(--bone); }
+        .adv .inner { display: grid; gap: 22px; padding: 0 22px 20px; }
+        .adv .toggle:first-of-type { margin-top: 0; }
+        .cmd {
+            max-height: 200px; margin: 0; overflow: auto; padding: 10px 12px;
+            border: 1px solid var(--line); border-radius: var(--r); background: var(--ground);
+            font: 12px/1.6 var(--mono); color: var(--pgm); white-space: pre-wrap; word-break: break-all;
+        }
         .bookmarklet {
-            display: inline-block; margin: 6px 0 2px; padding: 7px 12px; border-radius: 8px;
-            background: linear-gradient(135deg, var(--accent), #2563eb); color: #fff;
-            font-weight: 700; font-size: 0.8rem; text-decoration: none; cursor: grab;
+            display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px;
+            border: 1px dashed var(--line-2); border-radius: var(--r);
+            color: var(--bone); font-size: 13px; font-weight: 600; text-decoration: none; cursor: grab;
         }
+        .bookmarklet::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--rec); }
 
-        /* ---------------- File d'attente ---------------- */
-        .queue-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-        .queue-head h2 { margin: 0; font-size: 1rem; font-weight: 700; }
-        .empty { color: var(--faint); font-size: 0.84rem; font-style: italic; }
-        .jobs { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
-        .job {
-            border: 1px solid var(--border); border-radius: 12px; background: var(--glass-2);
-            padding: 12px 14px; min-width: 0;
+        .actionbar { position: sticky; bottom: 0; padding: 16px 22px; background: var(--panel); border-radius: 0 0 10px 10px; }
+        .rec {
+            display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 54px;
+            border: 0; border-radius: var(--r); background: var(--rec); color: #fff; cursor: pointer;
+            font-family: var(--display); font-size: 18px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+            transition: filter 0.15s, transform 0.1s;
         }
-        .job-top { display: flex; gap: 10px; align-items: flex-start; }
-        .job-icon { font-size: 1.1rem; line-height: 1.3; }
-        .job-main { flex: 1; min-width: 0; }
-        .job-title { font-weight: 600; font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .job-dir {
-            font-size: 0.72rem; color: var(--faint); margin-top: 2px;
-            font-family: ui-monospace, Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        }
-        .chip {
-            flex-shrink: 0; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
-            padding: 3px 8px; border-radius: 99px; border: 1px solid var(--border); color: var(--dim);
-        }
-        .chip.running { color: var(--accent); border-color: rgba(56,189,248,.4); }
-        .chip.done { color: var(--ok); border-color: rgba(52,211,153,.4); }
-        .chip.partial { color: var(--warn); border-color: rgba(252,211,77,.4); }
-        .chip.error { color: var(--err); border-color: rgba(248,113,113,.4); }
+        .rec::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: currentColor; }
+        .rec:hover { filter: brightness(1.08); }
+        .rec:active { transform: translateY(1px); }
+        .rec:disabled { background: var(--raised); color: var(--faint); cursor: not-allowed; filter: none; transform: none; }
+        .rec kbd { font: 11px var(--body); letter-spacing: 0; text-transform: none; opacity: 0.75; }
 
-        .bar { height: 6px; border-radius: 99px; background: rgba(255,255,255,.07); overflow: hidden; margin: 10px 0 6px; }
-        .bar > i { display: block; height: 100%; width: 0; border-radius: inherit;
-            background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .6s ease; }
-        .bar.done > i { background: var(--ok); }
-        .bar.error > i { background: var(--err); }
-        .bar.indet > i { width: 30%; animation: indet 1.3s ease-in-out infinite; }
-        @keyframes indet { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+        /* ---------- File d'attente ---------- */
+        .queue { position: sticky; top: 78px; display: flex; flex-direction: column; max-height: calc(100vh - 102px); }
+        .queue-head { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--line); }
+        .queue-head .eyebrow { margin: 0; white-space: nowrap; }
+        .count { min-width: 0; overflow: hidden; font: 12px var(--mono); color: var(--faint); white-space: nowrap; text-overflow: ellipsis; }
+        .queue-head .btn { margin-left: auto; }
+        .jobs { overflow: auto; }
+        .empty { padding: 48px 24px; text-align: center; color: var(--faint); }
+        .empty b { display: block; margin-bottom: 4px; font-family: var(--display); font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); }
 
-        .job-meta { font-size: 0.75rem; color: var(--dim); display: flex; flex-wrap: wrap; gap: 4px 12px; }
-        .job-err { font-size: 0.74rem; color: #fca5a5; margin-top: 6px; word-break: break-word; }
-        .job-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+        .job { padding: 14px 20px; border-bottom: 1px solid var(--line); }
+        .job:last-child { border-bottom: 0; }
+        .job-top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; }
+        .tally {
+            min-width: 78px; margin-top: 1px; padding: 2px 7px; border: 1px solid var(--line-2); border-radius: 3px;
+            font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+            text-align: center; white-space: nowrap; color: var(--dim);
+        }
+        .job[data-status="running"] .tally { border-color: var(--rec); background: var(--rec); color: #fff; }
+        .job[data-status="queued"] .tally { border-color: rgba(255, 176, 32, 0.5); color: var(--amber); }
+        .job[data-status="done"] .tally { border-color: var(--pgm); background: var(--pgm); color: #06140a; }
+        .job[data-status="partial"] .tally { border-color: var(--amber); color: var(--amber); }
+        .job[data-status="error"] .tally { border-color: var(--rec); color: var(--rec); }
+        .job-title { overflow: hidden; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
+        .job-dir { overflow: hidden; font: 12px var(--mono); color: var(--faint); white-space: nowrap; text-overflow: ellipsis; }
+        .job-no { font: 12px var(--mono); color: var(--faint); }
+
+        /* Barre de progression en timeline : graduations tous les 10 %. */
+        .scrub { position: relative; height: 10px; margin: 12px 0 6px; overflow: hidden; border: 1px solid var(--line); border-radius: 2px; background: var(--ground); }
+        .scrub::after {
+            content: ""; position: absolute; inset: 0; pointer-events: none;
+            background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(235, 231, 222, 0.16) calc(10% - 1px) 10%);
+        }
+        .scrub i { display: block; width: 0; height: 100%; background: var(--rec); transition: width 0.6s linear; }
+        .job[data-status="done"] .scrub i { background: var(--pgm); }
+        .job[data-status="partial"] .scrub i { background: var(--amber); }
+        .job[data-status="error"] .scrub i, .job[data-status="canceled"] .scrub i { background: var(--faint); }
+        .scrub.indet i { width: 24%; animation: sweep 1.4s ease-in-out infinite; }
+        @keyframes sweep { from { transform: translateX(-100%); } to { transform: translateX(420%); } }
+        .job-meta { font: 12px var(--mono); color: var(--dim); font-variant-numeric: tabular-nums; }
+        .job-err { margin-top: 6px; font-size: 12px; color: #ff8a80; word-break: break-word; }
+        .job-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
         .job-log {
-            margin-top: 8px; background: rgba(2,6,14,.6); border: 1px solid var(--border); border-radius: 8px;
-            padding: 8px 10px; font: 0.7rem/1.5 ui-monospace, Menlo, monospace; color: var(--dim);
-            white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow: auto;
+            max-height: 220px; margin: 8px 0 0; overflow: auto; padding: 8px 10px;
+            border: 1px solid var(--line); border-radius: var(--r); background: var(--ground);
+            font: 11.5px/1.5 var(--mono); color: var(--dim); white-space: pre-wrap; word-break: break-all;
         }
 
-        .footer { position: relative; z-index: 1; font-size: 0.72rem; color: var(--faint); display: flex; gap: 14px; }
+        .foot { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; padding: 4px 24px 24px; font-size: 12px; color: var(--faint); }
+        .foot .heart { color: var(--rec); }
 
         .toast {
-            position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(20px);
-            z-index: 10; background: #0d1424; border: 1px solid var(--border); color: var(--text);
-            padding: 10px 16px; border-radius: 10px; font-size: 0.84rem; opacity: 0; pointer-events: none;
-            transition: opacity .2s, transform .2s; box-shadow: 0 10px 30px rgba(0,0,0,.5); max-width: 90vw;
+            position: fixed; left: 50%; bottom: 24px; z-index: 20; max-width: 90vw; padding: 10px 16px;
+            border: 1px solid var(--line-2); border-left: 3px solid var(--pgm); border-radius: var(--r);
+            background: var(--raised); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5); font-size: 13px;
+            opacity: 0; pointer-events: none; transform: translate(-50%, 12px); transition: opacity 0.2s, transform 0.2s;
         }
-        .toast.show { opacity: 1; transform: translateX(-50%); }
-        .toast.err { border-color: rgba(248,113,113,.5); }
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
+        .toast.err { border-left-color: var(--rec); }
 
-        @media (max-width: 520px) {
-            .card { padding: 1.4rem 1.1rem; }
-            .inline { flex-wrap: wrap; }
-            .inline input { flex-basis: 100%; }
+        @media (max-width: 960px) {
+            .deck { grid-template-columns: minmax(0, 1fr); padding: 16px; gap: 16px; }
+            .queue { position: static; max-height: none; }
+            .banner { width: calc(100% - 32px); }
+        }
+        @media (max-width: 640px) {
+            .top { flex-wrap: wrap; gap: 10px 16px; padding: 10px 16px; }
+            .tabs { order: 3; width: 100%; }
+            .tab { flex: 1; }
+            .top { position: static; }
+            .section, .actionbar, .adv > summary, .adv .inner { padding-left: 16px; padding-right: 16px; }
+            .tile-group { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+            .tile-group > span { padding-top: 0; }
+            .row { flex-wrap: wrap; }
+            .row .field { flex-basis: 100%; }
+            #batchNameWrap { margin-left: 0; }
+            .rec kbd { display: none; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; }
+            .scrub.indet i { width: 100%; opacity: 0.35; }
         }
     </style>
 </head>
 <body>
 
-<div class="card" id="mainCard">
-    <div class="credit">made with <span class="heart">♥</span> by elisalien</div>
-    <div class="head">
-        <h1>🎬 yt-dlp Studio</h1>
-        <span class="pill" id="statusPill">Connexion…</span>
+<header class="top">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span class="wordmark">yt-dlp <b>Studio</b></span></div>
+    <div class="tabs" id="tabs" role="tablist" aria-label="Outil">
+        <button class="tab" role="tab" id="tabDl" aria-controls="panelDl" aria-selected="true" type="button">Télécharger</button>
+        <button class="tab" role="tab" id="tabCv" aria-controls="panelCv" aria-selected="false" type="button">Convertir</button>
     </div>
-    <p class="subtitle">Collez ou glissez vos liens, choisissez le dossier, cliquez sur Télécharger. 4K / 8K, MP3 ou HAP pour le VJ.</p>
+    <div class="status" id="statusPill" role="status"><i></i><span id="statusText">Connexion…</span></div>
+</header>
 
-    <div class="banner err" id="fileBanner" hidden>
-        <span>⚠️</span>
-        <span>Cette page doit être ouverte avec <b>launch.bat</b> (ou le raccourci « yt-dlp Studio ») : c'est lui qui lance les téléchargements.</span>
-    </div>
-    <div class="banner" id="updateBanner" hidden>
-        <span>🔄</span><span>Vérification des outils (yt-dlp, Deno, FFmpeg)… Les téléchargements démarreront juste après.</span>
-    </div>
+<div class="banner err" id="fileBanner" hidden>Ouvrez cette page avec <b>launch.bat</b> ou le raccourci « yt-dlp Studio » : c'est lui qui lance les téléchargements.</div>
+<div class="banner" id="updateBanner" hidden>Vérification de yt-dlp, Deno et FFmpeg. La file démarre dès la fin.</div>
 
-    <!-- ============ LIENS ============ -->
-    <div class="group">
-        <div class="label-row">
-            <label for="url">Liens <span class="soft">(un par ligne — ou glissez-les ici)</span></label>
-            <button class="link-btn" type="button" id="pasteBtn">📋 Coller</button>
-        </div>
-        <textarea id="url" rows="4" spellcheck="false" placeholder="https://www.youtube.com/watch?v=…&#10;https://www.youtube.com/playlist?list=…"></textarea>
-        <ul class="plan" id="plan"></ul>
-    </div>
+<main class="deck">
+    <section class="panel" id="mainCard" aria-label="Réglages">
 
-    <div class="group">
-        <label for="quality">Profil de qualité</label>
-        <select id="quality">
-            <optgroup label="Recommandé">
-                <option value="maxcompat">🛡️ Compatibilité maximale — H.264 · AAC · MP4 (lit partout)</option>
-            </optgroup>
-            <optgroup label="Haute résolution">
-                <option value="best">🌟 Qualité ultime — sans limite (4K / 8K)</option>
-                <option value="2160">📺 4K — max 2160p</option>
-                <option value="1440">🖥️ 2K — max 1440p</option>
-                <option value="1080">📱 Full HD — 1080p</option>
-            </optgroup>
-            <optgroup label="VJ — Resolume / Alley">
-                <option value="hap">🎛️ HAP (.mov)</option>
-                <option value="hapq">🎛️ HAP Q — qualité max (.mov)</option>
-            </optgroup>
-            <optgroup label="Audio">
-                <option value="mp3">🎵 MP3 — audio seul, qualité max</option>
-            </optgroup>
-            <optgroup label="Images">
-                <option value="frames">🎞️ Frames — dossier PNG (toutes les images)</option>
-            </optgroup>
-        </select>
-        <div class="hint" id="qualityHint"></div>
-    </div>
-
-    <!-- ============ DESTINATION ============ -->
-    <div class="group">
-        <label for="dest">Dossier de destination</label>
-        <div class="inline">
-            <input type="text" id="dest" spellcheck="false" placeholder="D:\Vidéos">
-            <button class="btn" type="button" id="pickBtn">📁 Choisir…</button>
-            <button class="btn" type="button" id="openDestBtn" title="Ouvrir dans l'Explorateur">↗</button>
-        </div>
-        <div class="hint">Mémorisé pour les prochaines fois. <button class="link-btn" type="button" id="resetDestBtn">Revenir au dossier par défaut</button></div>
-    </div>
-
-    <div class="group checks">
-        <label class="checkbox-card">
-            <input type="checkbox" id="groupBatch">
-            <span>📦 Ranger les liens multiples dans un sous-dossier à part</span>
-        </label>
-        <div class="batch-name" id="batchNameWrap">
-            <input type="text" id="batchName" placeholder="Nom du sous-dossier (par défaut : Lot date heure)">
-        </div>
-        <label class="checkbox-card">
-            <input type="checkbox" id="playlist">
-            <span>📚 Lien vidéo + playlist (<code>watch?v=…&amp;list=…</code>) : prendre la playlist entière</span>
-        </label>
-        <div class="hint">Les liens de playlist ou de chaîne vont <b>automatiquement</b> dans un dossier au nom de la playlist, numérotés dans l'ordre.</div>
-    </div>
-
-    <!-- ============ AVANCÉ ============ -->
-    <details>
-        <summary>Options avancées</summary>
-        <div class="inner">
-            <label class="checkbox-card" style="margin-bottom:8px">
-                <input type="checkbox" id="cookies">
-                <span>🍪 Cookies navigateur — nécessaire depuis sept. 2026 (403 / bot / playlist privée)</span>
-            </label>
-            <label for="cookiesBrowser">Navigateur des cookies</label>
-            <select id="cookiesBrowser" style="margin-bottom:12px">
-                <option value="firefox">Firefox (recommandé)</option>
-                <option value="chrome">Chrome</option>
-                <option value="edge">Edge</option>
-                <option value="brave">Brave</option>
-                <option value="chromium">Chromium</option>
-                <option value="opera">Opera</option>
-                <option value="vivaldi">Vivaldi</option>
-            </select>
-            <div class="hint">Utilise les cookies du navigateur où vous êtes connecté à YouTube. <b>À laisser coché</b> : sans cookies, YouTube ne renvoie plus que des flux DRM ou un 403. <b>Firefox est le choix fiable sous Windows</b> — Chrome, Edge et Brave chiffrent leurs cookies (App-Bound Encryption) et ne sont plus lisibles par yt-dlp.</div>
-
-            <label for="ffmpeg" style="margin-top:14px">Chemin vers FFmpeg <span class="soft">(facultatif)</span></label>
-            <input type="text" id="ffmpeg" spellcheck="false" placeholder="Laissez vide — FFmpeg est déjà inclus">
-
-            <label style="margin-top:16px">Envoyer un lien sans le copier</label>
-            <div class="hint" style="margin-top:0">Glissez ce bouton dans votre barre de favoris. Sur une page YouTube, cliquez dessus : le lien arrive directement ici.</div>
-            <a class="bookmarklet" id="bookmarklet" href="#" onclick="return false">⬇ yt-dlp Studio</a>
-            <label class="checkbox-card" style="margin-top:8px">
-                <input type="checkbox" id="autoStart">
-                <span>⚡ Télécharger immédiatement les liens envoyés par le favori</span>
-            </label>
-
-            <div class="label-row" style="margin-top:16px">
-                <label>Commande équivalente <span class="soft">(mode manuel, terminal.bat)</span></label>
-                <button class="link-btn" type="button" id="copyCmdBtn">Copier</button>
+        <!-- ================= TÉLÉCHARGER ================= -->
+        <div id="panelDl" role="tabpanel" aria-labelledby="tabDl">
+            <div class="section">
+                <div class="eyebrow"><label for="url">Liens</label><button class="link" type="button" id="pasteBtn">Coller le presse-papiers</button></div>
+                <textarea id="url" rows="4" spellcheck="false" placeholder="https://www.youtube.com/watch?v=…&#10;https://www.youtube.com/playlist?list=…"></textarea>
+                <p class="hint">Un lien par ligne. Vous pouvez aussi glisser un lien ou un onglet sur ce panneau.</p>
+                <ul class="plan" id="plan" aria-live="polite"></ul>
             </div>
-            <div class="result-box" id="output">—</div>
+
+            <div class="section">
+                <div class="eyebrow" id="profileLabel">Format</div>
+                <div class="tiles" id="profiles" role="radiogroup" aria-labelledby="profileLabel"></div>
+                <p class="hint" id="qualityHint"></p>
+            </div>
+
+            <div class="section">
+                <div class="eyebrow"><label for="dest">Destination</label><button class="link" type="button" id="resetDestBtn">Dossier par défaut</button></div>
+                <div class="row">
+                    <input class="field path" type="text" id="dest" spellcheck="false" placeholder="D:\Vidéos">
+                    <button class="btn" type="button" id="pickBtn">Choisir…</button>
+                    <button class="btn" type="button" id="openDestBtn">Ouvrir</button>
+                </div>
+                <label class="toggle"><input type="checkbox" id="groupBatch"><span>Ranger plusieurs liens dans un sous-dossier<small>Les playlists et les chaînes ont toujours leur propre dossier, numéroté dans l'ordre.</small></span></label>
+                <div id="batchNameWrap"><input class="field" type="text" id="batchName" aria-label="Nom du sous-dossier" placeholder="Nom du sous-dossier (par défaut : Lot date heure)"></div>
+                <label class="toggle"><input type="checkbox" id="playlist"><span>Prendre la playlist entière<small>Pour un lien vidéo qui contient aussi <code>&amp;list=…</code></small></span></label>
+            </div>
+
+            <details class="adv">
+                <summary>Options avancées</summary>
+                <div class="inner">
+                    <div>
+                        <label class="toggle"><input type="checkbox" id="cookies"><span>Utiliser les cookies du navigateur<small>À laisser activé : sans cookies, YouTube renvoie une erreur 403 ou des flux protégés.</small></span></label>
+                        <select class="field" id="cookiesBrowser" aria-label="Navigateur des cookies">
+                            <option value="firefox">Firefox (recommandé)</option>
+                            <option value="chrome">Chrome</option>
+                            <option value="edge">Edge</option>
+                            <option value="brave">Brave</option>
+                            <option value="chromium">Chromium</option>
+                            <option value="opera">Opera</option>
+                            <option value="vivaldi">Vivaldi</option>
+                        </select>
+                        <p class="hint"><b>Firefox est le choix fiable sous Windows.</b> Chrome, Edge et Brave chiffrent leurs cookies : yt-dlp ne peut plus les lire.</p>
+                    </div>
+                    <div>
+                        <div class="eyebrow"><label for="ffmpeg">Chemin FFmpeg</label><span class="aside">facultatif, sert aussi aux conversions</span></div>
+                        <input class="field path" type="text" id="ffmpeg" spellcheck="false" placeholder="Vide = FFmpeg inclus dans bin">
+                    </div>
+                    <div>
+                        <div class="eyebrow">Favori « Envoyer vers Studio »</div>
+                        <a class="bookmarklet" id="bookmarklet" href="#">yt-dlp Studio</a>
+                        <p class="hint">Glissez ce bouton dans la barre de favoris. Sur une page vidéo, cliquez dessus : le lien arrive ici.</p>
+                        <label class="toggle"><input type="checkbox" id="autoStart"><span>Télécharger dès qu'un lien arrive du favori</span></label>
+                    </div>
+                    <div>
+                        <div class="eyebrow">Commande équivalente<button class="link" type="button" id="copyCmdBtn">Copier</button></div>
+                        <pre class="cmd" id="output">—</pre>
+                        <p class="hint">Mode manuel : collez-la dans <code>terminal.bat</code>.</p>
+                    </div>
+                </div>
+            </details>
+
+            <div class="actionbar"><button class="rec" id="goBtn" type="button" disabled>Télécharger <kbd>Ctrl + Entrée</kbd></button></div>
         </div>
-    </details>
 
-    <button class="go-btn" id="goBtn" type="button" disabled>⬇ Télécharger<span class="kbd">Ctrl + Entrée</span></button>
-</div>
+        <!-- ================= CONVERTIR ================= -->
+        <div id="panelCv" role="tabpanel" aria-labelledby="tabCv" hidden>
+            <div class="section">
+                <div class="eyebrow"><label for="cvInput">Fichier source</label></div>
+                <div class="row">
+                    <input class="field path" type="text" id="cvInput" spellcheck="false" placeholder="D:\Vidéos\clip.mov">
+                    <button class="btn" type="button" id="cvPickBtn">Choisir…</button>
+                </div>
+                <ul class="plan" id="cvPlan" aria-live="polite"></ul>
+            </div>
 
-<!-- ============ FILE D'ATTENTE ============ -->
-<div class="card" id="queueCard">
-    <div class="queue-head">
-        <h2>File d'attente</h2>
-        <button class="btn small" type="button" id="clearBtn">Effacer les terminés</button>
-    </div>
-    <div class="jobs" id="jobs"><div class="empty">Aucun téléchargement pour l'instant.</div></div>
-</div>
+            <div class="section">
+                <div class="eyebrow" id="cvPresetLabel">Préréglage</div>
+                <div class="tiles" id="cvPresets" role="radiogroup" aria-labelledby="cvPresetLabel"></div>
+                <p class="hint" id="cvHint"></p>
+            </div>
 
-<div class="footer">
-    <button class="link-btn" type="button" id="quitBtn" style="color:var(--faint)">Arrêter le serveur</button>
-</div>
+            <div class="section">
+                <div class="eyebrow" id="cvScaleLabel">Largeur maximale</div>
+                <div class="tiles" id="cvScales" role="radiogroup" aria-labelledby="cvScaleLabel"></div>
+                <p class="hint">Réduit seulement : une vidéo plus petite garde sa taille. Sans effet sur le MP3.</p>
+                <label class="toggle"><input type="checkbox" id="cvOverwrite"><span>Remplacer le fichier produit s'il existe déjà</span></label>
+            </div>
 
-<div class="toast" id="toast"></div>
+            <div class="section">
+                <div class="eyebrow">Commande équivalente<button class="link" type="button" id="cvCopyBtn">Copier</button></div>
+                <pre class="cmd" id="cvOutput">—</pre>
+            </div>
+
+            <div class="actionbar"><button class="rec" id="cvGoBtn" type="button" disabled>Convertir <kbd>Ctrl + Entrée</kbd></button></div>
+        </div>
+    </section>
+
+    <!-- ================= FILE D'ATTENTE ================= -->
+    <section class="panel queue" id="queueCard" aria-label="File d'attente">
+        <div class="queue-head">
+            <h2 class="eyebrow">File d'attente</h2>
+            <span class="count" id="queueCount"></span>
+            <button class="btn small" type="button" id="clearBtn" disabled>Effacer les terminés</button>
+        </div>
+        <div class="jobs" id="jobs"></div>
+    </section>
+</main>
+
+<footer class="foot">
+    <span>made with <span class="heart">♥</span> by elisalien — pour Lucien</span>
+    <button class="link" type="button" id="quitBtn">Arrêter le serveur</button>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
     "use strict";
 
     /* =========================================================================
        Cette page parle au serveur local server.ps1 (lancé par launch.bat).
-       Le serveur construit lui-même les arguments yt-dlp à partir d'options en
-       liste blanche : la page n'envoie jamais de commande brute. Chaque appel
-       porte le jeton injecté dans la balise meta ci-dessus.
+       Le serveur construit lui-même les arguments yt-dlp / ffmpeg à partir
+       d'options en liste blanche : la page n'envoie jamais de commande brute.
+       Chaque appel porte le jeton injecté dans la balise meta ci-dessus.
        ========================================================================= */
 
     const TOKEN = document.querySelector('meta[name="studio-token"]').content;
     const SERVED = /^https?:$/.test(location.protocol) && /^[0-9a-f]{32}$/.test(TOKEN);
     const $ = id => document.getElementById(id);
 
+    const PROFILES = [
+        { label: "Vidéo", items: [
+            ["maxcompat", "Compatible", "MP4 · H.264 · ≤ 1080p"],
+            ["best", "Ultime", "Meilleur flux · 4K / 8K"],
+            ["2160", "4K", "≤ 2160p · MP4"],
+            ["1440", "2K", "≤ 1440p · MP4"],
+            ["1080", "Full HD", "≤ 1080p · MP4"]] },
+        { label: "VJ", items: [
+            ["hap", "HAP", ".mov · Resolume"],
+            ["hapq", "HAP Q", ".mov · qualité max"]] },
+        { label: "Autre", items: [
+            ["mp3", "MP3", "Audio seul"],
+            ["frames", "Frames", "PNG · chaque image"]] }
+    ];
     const QUALITY_HINTS = {
-        maxcompat: "Sélectionne le flux H.264 + AAC le plus universel (≤ 1080p). Idéal montage, mobile, lecteurs anciens.",
-        best: "Meilleure qualité disponible, tous codecs confondus (VP9/AV1 possibles — moins compatibles).",
-        2160: "Plafonne à 2160p. Fusion automatique son + image en MP4.",
-        1440: "Plafonne à 1440p. Fusion automatique son + image en MP4.",
-        1080: "Plafonne à 1080p. Fusion automatique son + image en MP4.",
-        hap: "Ré-encode en codec HAP (.mov), lu nativement par Resolume / Alley.",
-        hapq: "HAP Q : qualité maximale (~2× plus lourd). Pour rendus VJ exigeants.",
+        maxcompat: "Flux H.264 + AAC le plus universel (≤ 1080p). Idéal pour le montage, le mobile et les vieux lecteurs.",
+        best: "Meilleure qualité disponible, tous codecs confondus (VP9 possible, moins compatible).",
+        2160: "Plafonne à 2160p. Son et image fusionnés en MP4.",
+        1440: "Plafonne à 1440p. Son et image fusionnés en MP4.",
+        1080: "Plafonne à 1080p. Son et image fusionnés en MP4.",
+        hap: "Ré-encode en HAP (.mov), lu nativement par Resolume et Alley.",
+        hapq: "HAP Q : qualité maximale, fichiers environ deux fois plus lourds.",
         mp3: "Extrait uniquement l'audio en MP3, qualité VBR maximale.",
-        frames: "Télécharge en H.264 ≤1080p puis extrait CHAQUE frame en PNG dans <destination>/<titre>/. Lourd (ex. 3 min à 30 fps ≈ 5400 images)."
+        frames: "Télécharge en ≤ 1080p puis extrait chaque image en PNG dans <destination>/<titre>/. Lourd : 3 min à 30 fps ≈ 5 400 images."
     };
-
-    const STATUS = {
-        queued: "En attente", running: "En cours", done: "Terminé",
-        partial: "Terminé avec erreurs", error: "Échec", canceled: "Annulé"
+    const PRESETS = [
+        ["mp4compat", "MP4 compatible", "H.264 · AAC · CRF 20"],
+        ["mp4hq", "MP4 HQ", "H.264 · CRF 18 · 320k"],
+        ["hap", "HAP", ".mov · Resolume"],
+        ["hapq", "HAP Q", ".mov · qualité max"],
+        ["mp3", "MP3", "Audio · 320 kb/s"]
+    ];
+    const PRESET_HINTS = {
+        mp4compat: "Ré-encode en H.264 + AAC : lisible partout (VLC, TV, mobile, montage). Produit « nom-compatible.mp4 ».",
+        mp4hq: "Même compatibilité, qualité supérieure : plus lent et plus lourd. Produit « nom-hq.mp4 ».",
+        hap: "Codec HAP décodé par la carte graphique dans Resolume / Alley. Produit « nom-hap.mov ».",
+        hapq: "HAP Q : qualité maximale, environ deux fois plus lourd. Produit « nom-hapq.mov ».",
+        mp3: "Extrait l'audio en MP3 320 kb/s. Produit « nom.mp3 »."
     };
-    const KIND_ICON = { single: "🎞️", batch: "📦", playlist: "📚" };
+    const SCALES = [["", "Originale", "Sans redimension"], ["3840", "3840", "4K"], ["2560", "2560", "2K"], ["1920", "1920", "1080p"], ["1280", "1280", "720p"]];
+    const STATUS = { queued: "Attente", running: "En cours", done: "Terminé", partial: "Partiel", error: "Échec", canceled: "Annulé" };
+    const KIND = { single: "Vidéo", batch: "Lot", playlist: "Playlist", convert: "Conversion" };
+    const isActive = j => j.status === "running" || j.status === "queued";
 
-    let defaultDest = "";
-    let lastPlan = null;
+    let tab = "dl";
     let online = false;
-    const openLogs = new Set();
+    let defaultDest = "";
+    let rev = null;          // révision de la file connue ; null = recharger tout
+    let jobs = [];
 
     /* ------------------------------ utilitaires ------------------------------ */
     function store(key, value) {
-        try { if (value === undefined) return localStorage.getItem(key); localStorage.setItem(key, value); } catch (e) { return null; }
+        try {
+            if (value === undefined) return localStorage.getItem(key);
+            localStorage.setItem(key, value);
+        } catch (e) { return null; }
     }
 
     function debounce(fn, ms) {
@@ -491,6 +512,10 @@
         return n;
     }
 
+    function setText(node, text) {
+        if (node.textContent !== text) node.textContent = text;
+    }
+
     let toastTimer;
     function toast(msg, isErr) {
         const t = $("toast");
@@ -500,6 +525,7 @@
         clearTimeout(toastTimer);
         toastTimer = setTimeout(() => t.classList.remove("show"), 3200);
     }
+    const fail = e => toast(e.message, true);
 
     async function api(path, body) {
         const opts = { headers: { "X-Studio-Token": TOKEN }, cache: "no-store" };
@@ -511,16 +537,18 @@
         const res = await fetch(path, opts);
         let data = {};
         try { data = await res.json(); } catch (e) { /* réponse vide */ }
-        if (!res.ok) throw new Error(data.error || ("HTTP " + res.status));
+        if (!res.ok) throw Object.assign(new Error(data.error || "HTTP " + res.status), { status: res.status });
         return data;
     }
+
+    const num1 = n => n.toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
     function fmtSpeed(bps) {
         if (!(bps > 0)) return "";
         const units = ["o/s", "Ko/s", "Mo/s", "Go/s"];
         let i = 0;
         while (bps >= 1024 && i < units.length - 1) { bps /= 1024; i++; }
-        return bps.toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " " + units[i];
+        return num1(bps) + " " + units[i];
     }
 
     function fmtEta(s) {
@@ -530,93 +558,185 @@
         return h ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
     }
 
-    /* ------------------------------ formulaire ------------------------------ */
-    function urlLines() {
-        return $("url").value.split("\n").map(l => l.trim()).filter(Boolean);
+    function copyText(text) {
+        if (!text || text === "—") return;
+        const done = () => toast("Commande copiée");
+        const legacy = () => {
+            const ta = el("textarea", { style: "position:fixed;opacity:0" });
+            ta.value = text;
+            document.body.append(ta);
+            ta.select();
+            let ok = false;
+            try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+            ta.remove();
+            if (ok) done();
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, legacy);
+        else legacy();
     }
+
+    /* ------------------------------ tuiles radio ------------------------------ */
+    function tiles(box, name, groups) {
+        for (const g of groups) {
+            const row = el("div", { class: "tile-row" });
+            for (const [value, title, spec] of g.items) {
+                row.append(el("label", { class: "tile" },
+                    el("input", { type: "radio", name, value }),
+                    el("span", {}, el("b", { text: title }), el("small", { text: spec }))));
+            }
+            box.append(g.label ? el("div", { class: "tile-group" }, el("span", { text: g.label }), row) : row);
+        }
+    }
+
+    const radioValue = name => (document.querySelector(`input[name="${name}"]:checked`) || {}).value || "";
+
+    function setRadio(name, value) {
+        const inputs = [...document.querySelectorAll(`input[name="${name}"]`)];
+        const hit = inputs.find(i => i.value === String(value)) || inputs[0];
+        if (hit) hit.checked = true;
+    }
+
+    /* ------------------------------ formulaire ------------------------------ */
+    const urlLines = () => $("url").value.split("\n").map(l => l.trim()).filter(Boolean);
 
     function options() {
         return {
-            profile: $("quality").value,
+            profile: radioValue("profile"),
             dest: $("dest").value.trim(),
             playlist: $("playlist").checked,
             groupBatch: $("groupBatch").checked,
             cookies: $("cookies").checked,
             browser: $("cookiesBrowser").value,
-            ffmpeg: $("ffmpeg").value.trim()
+            ffmpeg: $("ffmpeg").value.trim(),
+            convPreset: radioValue("cvPreset"),
+            convScale: radioValue("cvScale"),
+            convOverwrite: $("cvOverwrite").checked
         };
     }
 
     function applySettings(s) {
         $("dest").value = s.dest || "";
-        $("quality").value = s.profile || "maxcompat";
+        setRadio("profile", s.profile || "maxcompat");
         $("playlist").checked = !!s.playlist;
         $("groupBatch").checked = s.groupBatch !== false;
         $("cookies").checked = s.cookies !== false;
         $("cookiesBrowser").value = s.browser || "firefox";
         $("ffmpeg").value = s.ffmpeg || "";
-        onFormChange(false);
+        setRadio("cvPreset", s.convPreset || "mp4compat");
+        setRadio("cvScale", s.convScale || "");
+        $("cvOverwrite").checked = !!s.convOverwrite;
+        syncHints();
+        refreshPlan();
+        refreshConvert();
     }
 
     const saveSettings = debounce(() => {
-        if (!online) return;
-        api("/api/settings", options()).catch(() => {});
+        if (online) api("/api/settings", options()).catch(() => {});
     }, 500);
 
-    function onFormChange(save) {
-        $("qualityHint").textContent = QUALITY_HINTS[$("quality").value] || "";
+    function syncHints() {
+        setText($("qualityHint"), QUALITY_HINTS[radioValue("profile")] || "");
+        setText($("cvHint"), PRESET_HINTS[radioValue("cvPreset")] || "");
         $("batchNameWrap").hidden = !$("groupBatch").checked;
+    }
+
+    function onDownloadChange(save) {
+        syncHints();
         store("ytdlp-draft", $("url").value);
         if (save) saveSettings();
         refreshPlan();
     }
 
+    function onConvertChange(save) {
+        syncHints();
+        if (save) saveSettings();
+        refreshConvert();
+    }
+
+    const planItem = (what, dest) => el("li", {}, el("span", { text: what }), el("span", { class: "to", text: "→" }), el("span", { class: "dest", text: dest }));
+    const planBad = text => el("li", { class: "bad", text });
+
+    // Aperçu calculé par le serveur. Le compteur écarte les réponses arrivées dans le désordre.
+    let planSeq = 0;
     const refreshPlan = debounce(async () => {
+        const seq = ++planSeq;
         const urls = urlLines();
-        const plan = $("plan");
-        if (!online || urls.length === 0) {
-            plan.replaceChildren();
-            $("output").textContent = "—";
-            lastPlan = null;
+        if (!online || !urls.length) {
+            $("plan").replaceChildren();
+            setText($("output"), "—");
             $("goBtn").disabled = true;
             return;
         }
         try {
             const p = await api("/api/preview", { ...options(), urls, batchName: $("batchName").value });
-            lastPlan = p;
+            if (seq !== planSeq) return;
             const items = [];
-            if (p.error) items.push(el("li", {}, el("span", { class: "bad", text: "⚠️ " + p.error })));
+            if (p.error) items.push(planBad(p.error));
             for (const j of p.jobs) {
-                const what = j.kind === "playlist" ? "📚 Playlist"
-                    : j.kind === "batch" ? `📦 ${j.count} liens`
-                    : "🎞️ Vidéo";
-                const where = j.kind === "playlist" ? j.dir.replace(/[\\/]$/, "") + "\\<nom de la playlist>\\" : j.dir;
-                items.push(el("li", {}, el("span", { text: what }), el("span", { class: "arrow", text: "→" }),
-                    el("span", { class: "path", text: where })));
+                const what = j.kind === "batch" ? `${j.count} liens` : KIND[j.kind];
+                const dest = j.kind === "playlist" ? j.dir.replace(/[\\/]$/, "") + "\\<nom de la playlist>\\" : j.dir;
+                items.push(planItem(what, dest));
             }
-            if (p.rejected && p.rejected.length) {
-                items.push(el("li", {}, el("span", { class: "bad", text: `⚠️ ${p.rejected.length} ligne(s) ignorée(s) : liens http(s) uniquement` })));
-            }
-            plan.replaceChildren(...items);
-            $("output").textContent = p.jobs.length ? p.jobs.map(j => j.command).join("\n\n") : "—";
-            $("goBtn").disabled = !!p.error || p.jobs.length === 0;
+            if (p.rejected.length) items.push(planBad(`${p.rejected.length} ligne(s) ignorée(s) : seuls les liens http(s) sont acceptés.`));
+            $("plan").replaceChildren(...items);
+            setText($("output"), p.jobs.length ? p.jobs.map(j => j.command).join("\n\n") : "—");
+            $("goBtn").disabled = !!p.error || !p.jobs.length;
         } catch (e) {
-            plan.replaceChildren(el("li", {}, el("span", { class: "bad", text: "⚠️ " + e.message })));
+            if (seq !== planSeq) return;
+            $("plan").replaceChildren(planBad(e.message));
             $("goBtn").disabled = true;
+        }
+    }, 250);
+
+    const cvOptions = () => ({ ...options(), input: $("cvInput").value.trim() });
+
+    let cvSeq = 0;
+    const refreshConvert = debounce(async () => {
+        const seq = ++cvSeq;
+        if (!online || !$("cvInput").value.trim()) {
+            $("cvPlan").replaceChildren();
+            setText($("cvOutput"), "—");
+            $("cvGoBtn").disabled = true;
+            return;
+        }
+        try {
+            const r = await api("/api/convert", { ...cvOptions(), dryRun: true });
+            if (seq !== cvSeq) return;
+            const items = [];
+            if (r.output) items.push(planItem("Produit", r.output));
+            if (r.error) items.push(planBad(r.error));
+            $("cvPlan").replaceChildren(...items);
+            setText($("cvOutput"), r.command || "—");
+            $("cvGoBtn").disabled = !!r.error;
+        } catch (e) {
+            if (seq !== cvSeq) return;
+            $("cvPlan").replaceChildren(planBad(e.message));
+            $("cvGoBtn").disabled = true;
         }
     }, 250);
 
     function addUrls(text) {
         const found = String(text || "").split(/\s+/).filter(s => /^https?:\/\//i.test(s));
-        if (!found.length) return 0;
         const existing = new Set(urlLines());
-        const fresh = found.filter(u => !existing.has(u));
+        const fresh = [...new Set(found)].filter(u => !existing.has(u));
         if (fresh.length) {
             const cur = $("url").value.replace(/\s+$/, "");
             $("url").value = (cur ? cur + "\n" : "") + fresh.join("\n") + "\n";
-            onFormChange(false);
+            setTab("dl");
+            onDownloadChange(false);
         }
-        return fresh.length;
+        return found.length;
+    }
+
+    function setTab(name) {
+        tab = name === "cv" ? "cv" : "dl";
+        for (const [id, panel, key] of [["tabDl", "panelDl", "dl"], ["tabCv", "panelCv", "cv"]]) {
+            const on = tab === key;
+            $(id).setAttribute("aria-selected", String(on));
+            $(id).tabIndex = on ? 0 : -1;
+            $(panel).hidden = !on;
+        }
+        store("ytdlp-tab", tab);
     }
 
     /* ------------------------------ actions ------------------------------ */
@@ -628,114 +748,151 @@
             const r = await api("/api/download", { ...options(), urls, batchName: $("batchName").value });
             $("url").value = "";
             $("batchName").value = "";
-            onFormChange(false);
-            toast(`✅ ${r.ids.length > 1 ? r.ids.length + " téléchargements ajoutés" : "Téléchargement ajouté"} à la file`);
+            onDownloadChange(false);
+            toast(r.ids.length > 1 ? `${r.ids.length} téléchargements ajoutés à la file` : "Téléchargement ajouté à la file");
             poll();
         } catch (e) {
-            toast("⚠️ " + e.message, true);
+            fail(e);
             refreshPlan();
         }
     }
 
-    async function pickFolder() {
-        $("pickBtn").disabled = true;
-        toast("📁 Choisissez le dossier dans la fenêtre Windows qui vient de s'ouvrir…");
+    async function startConvert() {
+        if (!online || !$("cvInput").value.trim()) return;
+        $("cvGoBtn").disabled = true;
         try {
-            const r = await api("/api/pick-folder", { start: $("dest").value.trim() });
+            await api("/api/convert", cvOptions());
+            toast("Conversion ajoutée à la file");
+            poll();
+        } catch (e) {
+            fail(e);
+        }
+        refreshConvert();
+    }
+
+    async function pick(endpoint, input, button, after) {
+        button.disabled = true;
+        toast("Choisissez dans la fenêtre Windows qui vient de s'ouvrir.");
+        try {
+            const r = await api(endpoint, { start: input.value.trim() });
             if (r.path) {
-                $("dest").value = r.path;
-                onFormChange(true);
-                toast("📁 " + r.path);
+                input.value = r.path;
+                after();
+                toast(r.path);
             } else {
                 $("toast").classList.remove("show");
             }
         } catch (e) {
-            toast("⚠️ " + e.message + " — tapez le chemin à la main.", true);
+            toast(e.message + " Saisissez le chemin à la main.", true);
         } finally {
-            $("pickBtn").disabled = false;
+            button.disabled = false;
         }
     }
 
-    async function openPath(path) {
-        try { await api("/api/open", { path }); } catch (e) { toast("⚠️ " + e.message, true); }
-    }
-
-    function copyText(text) {
-        const done = () => toast("✅ Commande copiée");
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(done, () => legacyCopy(text) && done());
-        } else if (legacyCopy(text)) done();
-    }
-    function legacyCopy(text) {
-        const ta = el("textarea", { style: "position:fixed;opacity:0" });
-        ta.value = text;
-        document.body.append(ta);
-        ta.select();
-        let ok = false;
-        try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
-        ta.remove();
-        return ok;
-    }
+    const openPath = path => api("/api/open", { path }).catch(fail);
 
     /* ------------------------------ file d'attente ------------------------------ */
-    function renderJobs(jobs) {
+    // Chaque travail garde son nœud DOM : on ne met à jour que ce qui change
+    // (pas de clignotement, le focus et le défilement du journal sont conservés).
+    const views = new Map();
+
+    function jobView(id) {
+        const v = { logOpen: false, openTarget: "" };
+        v.root = el("article", { class: "job" },
+            el("div", { class: "job-top" },
+                v.tally = el("span", { class: "tally" }),
+                el("div", {},
+                    v.title = el("div", { class: "job-title" }),
+                    v.dir = el("div", { class: "job-dir" })),
+                el("span", { class: "job-no", text: "#" + id })),
+            v.bar = el("div", { class: "scrub" }, v.fill = el("i")),
+            v.meta = el("div", { class: "job-meta" }),
+            v.err = el("div", { class: "job-err" }),
+            el("div", { class: "job-actions" },
+                v.cancel = el("button", { class: "btn small", type: "button", text: "Annuler",
+                    onclick: () => api("/api/cancel", { id }).then(poll).catch(fail) }),
+                el("button", { class: "btn small", type: "button", text: "Ouvrir le dossier",
+                    onclick: () => openPath(v.openTarget) }),
+                v.logBtn = el("button", { class: "btn small ghost", type: "button",
+                    onclick: () => { v.logOpen = !v.logOpen; updateJob(v, v.job); } })),
+            v.log = el("pre", { class: "job-log" }));
+        return v;
+    }
+
+    function updateJob(v, j) {
+        v.job = j;
+        const active = isActive(j);
+        v.root.dataset.status = j.status;
+        setText(v.tally, STATUS[j.status] || j.status);
+        const title = j.title || j.label;
+        setText(v.title, title);
+        v.title.title = title;
+        setText(v.dir, j.dir);
+        v.dir.title = j.dir;
+
+        const indet = j.status === "running" && !(j.percent >= 0);
+        v.bar.classList.toggle("indet", indet);
+        v.fill.style.width = indet ? "" : (j.status === "done" ? 100 : Math.max(0, j.percent || 0)) + "%";
+
+        const meta = [KIND[j.kind]];
+        if (j.itemCount > 1 || j.kind === "playlist") meta.push(`élément ${j.itemIndex || 0}${j.itemCount ? "/" + j.itemCount : ""}`);
+        if (j.status === "running") {
+            if (j.percent >= 0) meta.push(num1(j.percent) + " %");
+            meta.push(fmtSpeed(j.speed));
+            if (fmtEta(j.eta)) meta.push("reste " + fmtEta(j.eta));
+        }
+        if (j.filesDone) meta.push(`${j.filesDone} fichier${j.filesDone > 1 ? "s" : ""}`);
+        setText(v.meta, meta.filter(Boolean).join("  ·  "));
+
+        const err = !active && (j.status === "error" || j.status === "partial") ? j.lastError : "";
+        setText(v.err, err);
+        v.err.hidden = !err;
+        v.cancel.hidden = !active;
+        v.openTarget = j.kind !== "batch" && j.filesDone === 1 && j.lastFile ? j.lastFile : j.dir;
+
+        const hasLog = j.log && j.log.length > 0;
+        v.logBtn.hidden = !hasLog;
+        setText(v.logBtn, v.logOpen ? "Masquer le journal" : "Journal");
+        v.log.hidden = !(v.logOpen && hasLog);
+        if (!v.log.hidden) {
+            const text = j.log.join("\n");
+            if (v.log.textContent !== text) {
+                const atEnd = v.log.scrollHeight - v.log.scrollTop - v.log.clientHeight < 24;
+                v.log.textContent = text;
+                if (atEnd) v.log.scrollTop = v.log.scrollHeight;
+            }
+        }
+    }
+
+    function renderJobs(list) {
         const box = $("jobs");
-        if (!jobs.length) {
-            box.replaceChildren(el("div", { class: "empty", text: "Aucun téléchargement pour l'instant." }));
+        const active = list.filter(isActive).length;
+        setText($("queueCount"), !list.length ? "" : active ? `${active} en cours · ${list.length} au total` : `${list.length} au total`);
+        $("clearBtn").disabled = list.length === active;
+
+        if (!list.length) {
+            views.clear();
+            if (!box.querySelector(".empty")) {
+                box.replaceChildren(el("div", { class: "empty" }, el("b", { text: "File vide" }),
+                    "Les téléchargements et les conversions apparaissent ici."));
+            }
             return;
         }
-        const cards = jobs.slice().reverse().map(j => {
-            const active = j.status === "running" || j.status === "queued";
-            const title = j.title || j.label;
-
-            const bar = el("div", { class: "bar" }, el("i"));
-            if (j.status === "running" && !(j.percent >= 0)) bar.classList.add("indet");
-            else {
-                const pct = j.status === "done" ? 100 : Math.max(0, j.percent || 0);
-                bar.firstChild.style.width = pct + "%";
-                if (j.status === "done") bar.classList.add("done");
-                if (j.status === "error") bar.classList.add("error");
-            }
-
-            const meta = [];
-            if (j.itemCount > 1 || j.kind === "playlist") {
-                meta.push(`Élément ${j.itemIndex || 0}${j.itemCount ? "/" + j.itemCount : ""}`);
-            }
-            if (j.status === "running" && j.percent >= 0) meta.push(j.percent.toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " %");
-            if (j.status === "running" && fmtSpeed(j.speed)) meta.push(fmtSpeed(j.speed));
-            if (j.status === "running" && fmtEta(j.eta)) meta.push("reste " + fmtEta(j.eta));
-            if (j.filesDone) meta.push(`${j.filesDone} fichier${j.filesDone > 1 ? "s" : ""}`);
-            if (j.status === "queued") meta.push("En attente du téléchargement précédent…");
-
-            const actions = el("div", { class: "job-actions" });
-            if (active) actions.append(el("button", { class: "btn small", type: "button", text: "✕ Annuler",
-                onclick: () => api("/api/cancel", { id: j.id }).then(poll).catch(e => toast("⚠️ " + e.message, true)) }));
-            actions.append(el("button", { class: "btn small", type: "button", text: "📂 Ouvrir le dossier",
-                onclick: () => openPath(j.kind !== "batch" && j.filesDone === 1 && j.lastFile ? j.lastFile : j.dir) }));
-            if (j.log && j.log.length) actions.append(el("button", { class: "btn small", type: "button",
-                text: openLogs.has(j.id) ? "Masquer le journal" : "Journal",
-                onclick: () => { openLogs.has(j.id) ? openLogs.delete(j.id) : openLogs.add(j.id); poll(); } }));
-
-            const card = el("div", { class: "job" },
-                el("div", { class: "job-top" },
-                    el("span", { class: "job-icon", text: KIND_ICON[j.kind] || "🎞️" }),
-                    el("div", { class: "job-main" },
-                        el("div", { class: "job-title", text: title, title }),
-                        el("div", { class: "job-dir", text: j.dir, title: j.dir })),
-                    el("span", { class: "chip " + j.status, text: STATUS[j.status] || j.status })),
-                bar,
-                meta.length ? el("div", { class: "job-meta" }, ...meta.map(m => el("span", { text: m }))) : null,
-                (j.lastError && !active && j.status !== "done") ? el("div", { class: "job-err", text: j.lastError }) : null,
-                actions);
-
-            if (openLogs.has(j.id) && j.log) {
-                const pre = el("div", { class: "job-log", text: j.log.join("\n") });
-                card.append(pre);
-                requestAnimationFrame(() => { pre.scrollTop = pre.scrollHeight; });
-            }
-            return card;
+        const seen = new Set();
+        const nodes = list.slice().reverse().map(j => {
+            seen.add(j.id);
+            let v = views.get(j.id);
+            if (!v) views.set(j.id, v = jobView(j.id));
+            updateJob(v, j);
+            return v.root;
         });
-        box.replaceChildren(...cards);
+        for (const id of views.keys()) if (!seen.has(id)) views.delete(id);
+        if (nodes.length !== box.children.length || nodes.some((n, i) => box.children[i] !== n)) box.replaceChildren(...nodes);
+    }
+
+    function setStatus(state, text) {
+        $("statusPill").dataset.state = state;
+        setText($("statusText"), text);
     }
 
     let pollTimer;
@@ -743,41 +900,44 @@
         clearTimeout(pollTimer);
         let delay = 3000;
         try {
-            const st = await api("/api/state");
-            const wasOnline = online;
+            const first = rev === null;
+            const st = await api(first ? "/api/state" : "/api/state?rev=" + rev);
             online = true;
-            defaultDest = st.defaultDest;
-            if (!wasOnline) { applySettings(st.settings); handleIncomingUrl(); }
-            const active = st.jobs.some(j => j.status === "running" || j.status === "queued");
+            if (st.settings) {
+                defaultDest = st.defaultDest;
+                applySettings(st.settings);
+            }
+            if (st.jobs) {
+                jobs = st.jobs;
+                renderJobs(jobs);
+            }
+            rev = st.rev;
+            if (first) handleIncomingUrl();
+            const active = jobs.some(isActive);
             $("updateBanner").hidden = !st.updating;
-            setPill(st.updating ? "busy" : "ok", st.updating ? "Mise à jour des outils…" : active ? "Téléchargement…" : "Prêt");
-            renderJobs(st.jobs);
+            if (st.updating) setStatus("busy", "Mise à jour des outils");
+            else setStatus(active ? "live" : "ok", active ? "En cours" : "Prêt");
             if (active || st.updating) delay = 1000;
         } catch (e) {
             online = false;
-            setPill("off", "Serveur arrêté — relancez yt-dlp Studio");
+            rev = null;
+            setStatus("off", e.status === 403 ? "Rechargez la page" : "Serveur arrêté");
             $("goBtn").disabled = true;
+            $("cvGoBtn").disabled = true;
         }
         pollTimer = setTimeout(poll, delay);
     }
 
-    function setPill(cls, text) {
-        const p = $("statusPill");
-        p.className = "pill " + cls;
-        p.textContent = text;
-    }
-
     // Lien reçu via le favori : /?url=https://…
     function handleIncomingUrl() {
-        const params = new URLSearchParams(location.search);
-        const incoming = params.get("url");
+        const incoming = new URLSearchParams(location.search).get("url");
         if (!incoming) return;
         history.replaceState(null, "", location.pathname);
         if (!addUrls(incoming)) return;
         if (store("ytdlp-autostart") === "1") {
             setTimeout(startDownload, 400);
         } else {
-            toast("🔗 Lien reçu — cliquez sur Télécharger");
+            toast("Lien reçu : cliquez sur Télécharger");
             $("goBtn").focus();
         }
     }
@@ -786,54 +946,82 @@
     function init() {
         window.name = "ytdlpstudio"; // le favori réutilise cet onglet
 
+        tiles($("profiles"), "profile", PROFILES);
+        tiles($("cvPresets"), "cvPreset", [{ items: PRESETS }]);
+        tiles($("cvScales"), "cvScale", [{ items: SCALES }]);
+        setRadio("profile", "maxcompat");
+        setRadio("cvPreset", "mp4compat");
+        setRadio("cvScale", "");
+
         const draft = store("ytdlp-draft");
         if (draft) $("url").value = draft;
         $("autoStart").checked = store("ytdlp-autostart") === "1";
-        $("qualityHint").textContent = QUALITY_HINTS[$("quality").value];
+        setTab(store("ytdlp-tab"));
+        syncHints();
+        renderJobs([]);
 
         if (!SERVED) {
             $("fileBanner").hidden = false;
-            $("queueCard").hidden = true;
-            $("statusPill").hidden = true;
-            document.querySelector(".footer").hidden = true;
+            for (const id of ["queueCard", "statusPill", "quitBtn"]) $(id).hidden = true;
             return;
         }
 
-        const origin = location.origin;
-        $("bookmarklet").href = `javascript:(function(){window.open('${origin}/?url='+encodeURIComponent(location.href),'ytdlpstudio')})()`;
+        $("bookmarklet").href = `javascript:(function(){window.open('${location.origin}/?url='+encodeURIComponent(location.href),'ytdlpstudio')})()`;
+        $("bookmarklet").addEventListener("click", e => { e.preventDefault(); toast("Glissez ce bouton dans la barre de favoris."); });
 
-        $("url").addEventListener("input", () => onFormChange(false));
-        $("url").addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); startDownload(); } });
-        $("batchName").addEventListener("input", () => onFormChange(false));
-        for (const id of ["quality", "playlist", "groupBatch", "cookies", "cookiesBrowser"]) {
-            $(id).addEventListener("change", () => onFormChange(true));
+        $("tabDl").addEventListener("click", () => setTab("dl"));
+        $("tabCv").addEventListener("click", () => setTab("cv"));
+        $("tabs").addEventListener("keydown", e => {
+            if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+            setTab(tab === "dl" ? "cv" : "dl");
+            $(tab === "dl" ? "tabDl" : "tabCv").focus();
+        });
+
+        // Télécharger
+        $("url").addEventListener("input", () => onDownloadChange(false));
+        $("batchName").addEventListener("input", () => onDownloadChange(false));
+        for (const id of ["profiles", "playlist", "groupBatch", "cookies", "cookiesBrowser"]) {
+            $(id).addEventListener("change", () => onDownloadChange(true));
         }
-        for (const id of ["dest", "ffmpeg"]) $(id).addEventListener("input", () => onFormChange(true));
-
+        $("dest").addEventListener("input", () => onDownloadChange(true));
+        $("ffmpeg").addEventListener("input", () => { onDownloadChange(true); refreshConvert(); });
         $("autoStart").addEventListener("change", e => store("ytdlp-autostart", e.target.checked ? "1" : "0"));
         $("goBtn").addEventListener("click", startDownload);
-        $("pickBtn").addEventListener("click", pickFolder);
+        $("pickBtn").addEventListener("click", () => pick("/api/pick-folder", $("dest"), $("pickBtn"), () => onDownloadChange(true)));
         $("openDestBtn").addEventListener("click", () => openPath($("dest").value.trim()));
-        $("resetDestBtn").addEventListener("click", () => { $("dest").value = defaultDest; onFormChange(true); });
-        $("copyCmdBtn").addEventListener("click", () => { if (lastPlan && lastPlan.jobs.length) copyText($("output").textContent); });
-        $("clearBtn").addEventListener("click", () => api("/api/clear", {}).then(poll).catch(() => {}));
+        $("resetDestBtn").addEventListener("click", () => { $("dest").value = defaultDest; onDownloadChange(true); });
+        $("copyCmdBtn").addEventListener("click", () => copyText($("output").textContent));
+        $("pasteBtn").addEventListener("click", async () => {
+            try {
+                if (!addUrls(await navigator.clipboard.readText())) toast("Le presse-papiers ne contient pas de lien.", true);
+            } catch (e) {
+                $("url").focus();
+                toast("Faites Ctrl + V dans le champ Liens.");
+            }
+        });
+
+        // Convertir
+        $("cvInput").addEventListener("input", () => onConvertChange(false));
+        for (const id of ["cvPresets", "cvScales", "cvOverwrite"]) $(id).addEventListener("change", () => onConvertChange(true));
+        $("cvPickBtn").addEventListener("click", () => pick("/api/pick-file", $("cvInput"), $("cvPickBtn"), () => onConvertChange(false)));
+        $("cvGoBtn").addEventListener("click", startConvert);
+        $("cvCopyBtn").addEventListener("click", () => copyText($("cvOutput").textContent));
+
+        document.addEventListener("keydown", e => {
+            if (e.key !== "Enter" || !(e.ctrlKey || e.metaKey)) return;
+            e.preventDefault();
+            if (tab === "cv") startConvert(); else startDownload();
+        });
+
+        // File et serveur
+        $("clearBtn").addEventListener("click", () => api("/api/clear", {}).then(poll).catch(fail));
         $("quitBtn").addEventListener("click", async () => {
             if (!confirm("Arrêter le serveur ? Les téléchargements en cours seront annulés.")) return;
             try { await api("/api/quit", {}); } catch (e) { /* déjà arrêté */ }
             poll();
         });
 
-        $("pasteBtn").addEventListener("click", async () => {
-            try {
-                const text = await navigator.clipboard.readText();
-                if (!addUrls(text)) toast("Le presse-papiers ne contient pas de lien.", true);
-            } catch (e) {
-                $("url").focus();
-                toast("Faites Ctrl + V dans le champ.");
-            }
-        });
-
-        // Glisser-déposer un lien (depuis la barre d'adresse, un onglet ou une page)
+        // Glisser-déposer un lien (barre d'adresse, onglet ou page)
         const card = $("mainCard");
         card.addEventListener("dragover", e => { e.preventDefault(); card.classList.add("drop"); });
         card.addEventListener("dragleave", e => { if (!card.contains(e.relatedTarget)) card.classList.remove("drop"); });
@@ -841,8 +1029,7 @@
             e.preventDefault();
             card.classList.remove("drop");
             const dt = e.dataTransfer;
-            const text = dt.getData("text/uri-list") || dt.getData("text/plain");
-            if (!addUrls(text)) toast("Aucun lien http(s) détecté.", true);
+            if (!addUrls(dt.getData("text/uri-list") || dt.getData("text/plain"))) toast("Aucun lien http(s) détecté.", true);
         });
 
         poll();
