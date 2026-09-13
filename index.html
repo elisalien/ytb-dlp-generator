@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="studio-token" content="__STUDIO_TOKEN__">
     <title>yt-dlp · Studio</title>
     <style>
         :root {
@@ -10,6 +11,8 @@
             --accent-2: #818cf8;
             --accent-soft: rgba(56, 189, 248, 0.16);
             --ok: #34d399;
+            --warn: #fcd34d;
+            --err: #f87171;
             --text: #eef2f9;
             --dim: #9aa7bd;
             --faint: #5f6b80;
@@ -20,17 +23,18 @@
             --radius: 18px;
         }
         * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
 
-        html, body { height: 100%; }
+        html, body { min-height: 100%; }
         body {
             font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
             color: var(--text);
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
+            gap: 16px;
             margin: 0;
-            padding: 28px 18px;
+            padding: 28px 18px 40px;
             background: #05080f;
             position: relative;
             overflow-x: hidden;
@@ -69,8 +73,9 @@
             border: 1px solid var(--border);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.07);
             width: 100%;
-            max-width: 600px;
+            max-width: 660px;
         }
+        .card.drop { border-color: var(--accent); box-shadow: 0 0 0 3.5px var(--accent-soft), 0 20px 60px rgba(0,0,0,.5); }
 
         .credit {
             display: flex; align-items: center; gap: 7px;
@@ -84,30 +89,43 @@
         }
         .credit .heart { color: var(--accent); }
 
+        .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
         h1 {
             font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em;
             margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.5rem;
         }
         .subtitle { color: var(--dim); font-size: 0.85rem; margin: 0 0 1.5rem; }
 
+        .pill {
+            flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.72rem; font-weight: 600; color: var(--dim);
+            padding: 5px 10px; border-radius: 99px; border: 1px solid var(--border); background: var(--glass-2);
+            margin-top: 4px;
+        }
+        .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
+        .pill.ok::before { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+        .pill.busy::before { background: var(--warn); }
+        .pill.off { color: var(--err); }
+        .pill.off::before { background: var(--err); }
+
         .group { margin-bottom: 1.1rem; }
-        .row { display: flex; gap: 0.9rem; }
-        .row > .group { flex: 1; margin-bottom: 1.1rem; }
 
         label {
             display: block; margin-bottom: 0.45rem; font-weight: 600; color: var(--dim);
             font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em;
         }
         label .soft { text-transform: none; letter-spacing: 0; color: var(--faint); font-weight: 500; }
+        .label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+        .label-row label { margin-bottom: 0.45rem; }
 
-        input[type="text"], input[type="number"], select, textarea {
+        input[type="text"], select, textarea {
             width: 100%; padding: 12px 14px;
             background: var(--field); border: 1px solid var(--border);
             border-radius: 11px; font-size: 0.92rem; color: var(--text);
             transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
             font-family: inherit;
         }
-        textarea { resize: vertical; min-height: 92px; line-height: 1.5; }
+        textarea { resize: vertical; min-height: 96px; line-height: 1.5; }
         select {
             appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 38px;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239aa7bd' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
@@ -120,14 +138,36 @@
             box-shadow: 0 0 0 3.5px var(--accent-soft); background: rgba(8, 13, 26, 0.7);
         }
 
+        .inline { display: flex; gap: 8px; }
+        .inline input { flex: 1; min-width: 0; }
+
+        .btn {
+            flex-shrink: 0; padding: 0 14px; min-height: 44px;
+            background: var(--glass); color: var(--text);
+            border: 1px solid var(--border); border-radius: 11px;
+            font: 600 0.84rem/1 inherit; cursor: pointer; white-space: nowrap;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .btn:hover { border-color: rgba(56, 189, 248, 0.45); background: rgba(56, 189, 248, 0.08); }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn.small { min-height: 30px; padding: 0 10px; font-size: 0.76rem; border-radius: 8px; }
+        .link-btn {
+            background: none; border: none; color: var(--accent); cursor: pointer;
+            font: 600 0.74rem/1 inherit; padding: 2px 0;
+        }
+        .link-btn:hover { text-decoration: underline; }
+
         .checkbox-card {
             display: flex; align-items: center; gap: 11px; cursor: pointer;
             padding: 12px 14px; background: var(--field); border: 1px solid var(--border);
             border-radius: 11px; transition: border-color 0.2s;
+            text-transform: none; letter-spacing: 0; color: var(--text);
         }
         .checkbox-card:hover { border-color: rgba(56, 189, 248, 0.4); }
         .checkbox-card input { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
         .checkbox-card span { font-weight: 500; font-size: 0.88rem; }
+        .checks { display: grid; gap: 8px; }
+        .batch-name { margin-top: 8px; }
 
         details {
             margin-bottom: 1.1rem; border: 1px solid var(--border);
@@ -143,95 +183,207 @@
         details .inner { padding: 0 14px 14px; }
 
         .hint { font-size: 0.74rem; color: var(--faint); margin-top: 6px; line-height: 1.5; }
+        .hint b { color: var(--dim); }
+        code { font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace; font-size: 0.92em; }
 
-        .out-wrap { margin-top: 0.4rem; }
+        /* Plan : ou va chaque lien */
+        .plan { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 5px; }
+        .plan li {
+            display: flex; gap: 8px; align-items: baseline;
+            font-size: 0.78rem; color: var(--dim); line-height: 1.45;
+        }
+        .plan li > span:first-child { white-space: nowrap; flex-shrink: 0; }
+        .plan li > span.bad:first-child { white-space: normal; }
+        .plan .arrow { color: var(--faint); flex-shrink: 0; }
+        .plan .path { color: var(--text); word-break: break-all; font-family: ui-monospace, Menlo, monospace; font-size: 0.74rem; }
+        .plan .bad { color: var(--warn); }
+
         .result-box {
             background: rgba(2, 6, 14, 0.6); color: #6ee7a8;
-            padding: 1rem 1.15rem; border-radius: 12px;
+            padding: 0.9rem 1rem; border-radius: 12px;
             font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
-            word-break: break-all; font-size: 0.8rem; line-height: 1.65;
-            border: 1px solid var(--border); min-height: 52px;
+            word-break: break-all; font-size: 0.74rem; line-height: 1.6;
+            border: 1px solid var(--border); white-space: pre-wrap; max-height: 220px; overflow: auto;
         }
-        .result-box.placeholder { color: var(--faint); font-style: italic; }
 
-        .copy-btn {
-            width: 100%; padding: 14px;
+        .go-btn {
+            width: 100%; padding: 15px;
             background: linear-gradient(135deg, var(--accent), #2563eb);
             color: #fff; border: none; border-radius: 12px;
-            font-size: 0.92rem; font-weight: 600; cursor: pointer; margin-top: 1.1rem;
+            font-size: 0.96rem; font-weight: 700; cursor: pointer; margin-top: 0.3rem;
             transition: transform 0.16s, filter 0.2s, box-shadow 0.2s;
             box-shadow: 0 8px 22px rgba(37, 99, 235, 0.32); font-family: inherit;
         }
-        .copy-btn:hover { transform: translateY(-1px); filter: brightness(1.07); }
-        .copy-btn:active { transform: none; }
-        .copy-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; filter: none; box-shadow: none; }
+        .go-btn:hover { transform: translateY(-1px); filter: brightness(1.07); }
+        .go-btn:active { transform: none; }
+        .go-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; filter: none; box-shadow: none; }
+        .kbd { font-weight: 500; opacity: 0.7; font-size: 0.78rem; margin-left: 6px; }
 
-        .info {
-            color: #fcd34d; font-size: 0.78rem; margin-top: 1rem;
+        .banner {
+            color: var(--warn); font-size: 0.8rem; margin-bottom: 1.1rem;
             display: flex; gap: 8px; align-items: flex-start;
             background: rgba(251, 191, 36, 0.07); padding: 11px 13px;
             border-radius: 11px; border: 1px solid rgba(251, 191, 36, 0.2); line-height: 1.5;
+        }
+        .banner.err { color: #fca5a5; background: rgba(248, 113, 113, 0.08); border-color: rgba(248, 113, 113, 0.25); }
+
+        .bookmarklet {
+            display: inline-block; margin: 6px 0 2px; padding: 7px 12px; border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent), #2563eb); color: #fff;
+            font-weight: 700; font-size: 0.8rem; text-decoration: none; cursor: grab;
+        }
+
+        /* ---------------- File d'attente ---------------- */
+        .queue-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .queue-head h2 { margin: 0; font-size: 1rem; font-weight: 700; }
+        .empty { color: var(--faint); font-size: 0.84rem; font-style: italic; }
+        .jobs { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+        .job {
+            border: 1px solid var(--border); border-radius: 12px; background: var(--glass-2);
+            padding: 12px 14px; min-width: 0;
+        }
+        .job-top { display: flex; gap: 10px; align-items: flex-start; }
+        .job-icon { font-size: 1.1rem; line-height: 1.3; }
+        .job-main { flex: 1; min-width: 0; }
+        .job-title { font-weight: 600; font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .job-dir {
+            font-size: 0.72rem; color: var(--faint); margin-top: 2px;
+            font-family: ui-monospace, Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .chip {
+            flex-shrink: 0; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+            padding: 3px 8px; border-radius: 99px; border: 1px solid var(--border); color: var(--dim);
+        }
+        .chip.running { color: var(--accent); border-color: rgba(56,189,248,.4); }
+        .chip.done { color: var(--ok); border-color: rgba(52,211,153,.4); }
+        .chip.partial { color: var(--warn); border-color: rgba(252,211,77,.4); }
+        .chip.error { color: var(--err); border-color: rgba(248,113,113,.4); }
+
+        .bar { height: 6px; border-radius: 99px; background: rgba(255,255,255,.07); overflow: hidden; margin: 10px 0 6px; }
+        .bar > i { display: block; height: 100%; width: 0; border-radius: inherit;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .6s ease; }
+        .bar.done > i { background: var(--ok); }
+        .bar.error > i { background: var(--err); }
+        .bar.indet > i { width: 30%; animation: indet 1.3s ease-in-out infinite; }
+        @keyframes indet { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+
+        .job-meta { font-size: 0.75rem; color: var(--dim); display: flex; flex-wrap: wrap; gap: 4px 12px; }
+        .job-err { font-size: 0.74rem; color: #fca5a5; margin-top: 6px; word-break: break-word; }
+        .job-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+        .job-log {
+            margin-top: 8px; background: rgba(2,6,14,.6); border: 1px solid var(--border); border-radius: 8px;
+            padding: 8px 10px; font: 0.7rem/1.5 ui-monospace, Menlo, monospace; color: var(--dim);
+            white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow: auto;
+        }
+
+        .footer { position: relative; z-index: 1; font-size: 0.72rem; color: var(--faint); display: flex; gap: 14px; }
+
+        .toast {
+            position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(20px);
+            z-index: 10; background: #0d1424; border: 1px solid var(--border); color: var(--text);
+            padding: 10px 16px; border-radius: 10px; font-size: 0.84rem; opacity: 0; pointer-events: none;
+            transition: opacity .2s, transform .2s; box-shadow: 0 10px 30px rgba(0,0,0,.5); max-width: 90vw;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%); }
+        .toast.err { border-color: rgba(248,113,113,.5); }
+
+        @media (max-width: 520px) {
+            .card { padding: 1.4rem 1.1rem; }
+            .inline { flex-wrap: wrap; }
+            .inline input { flex-basis: 100%; }
         }
     </style>
 </head>
 <body>
 
-<div class="card">
+<div class="card" id="mainCard">
     <div class="credit">made with <span class="heart">♥</span> by elisalien</div>
-    <h1>🎬 yt-dlp Studio</h1>
-    <p class="subtitle">Téléchargez vos vidéos en haute qualité (4K / 8K), MP3 ou HAP pour le VJ.</p>
+    <div class="head">
+        <h1>🎬 yt-dlp Studio</h1>
+        <span class="pill" id="statusPill">Connexion…</span>
+    </div>
+    <p class="subtitle">Collez ou glissez vos liens, choisissez le dossier, cliquez sur Télécharger. 4K / 8K, MP3 ou HAP pour le VJ.</p>
 
-    <!-- ============ DOWNLOAD ============ -->
-    <section id="panel-dl">
-        <div class="group">
-            <label for="url">URLs des vidéos <span class="soft">(une par ligne)</span></label>
-            <textarea id="url" rows="4" placeholder="https://www.youtube.com/watch?v=…&#10;https://vimeo.com/…" oninput="generate()"></textarea>
+    <div class="banner err" id="fileBanner" hidden>
+        <span>⚠️</span>
+        <span>Cette page doit être ouverte avec <b>launch.bat</b> (ou le raccourci « yt-dlp Studio ») : c'est lui qui lance les téléchargements.</span>
+    </div>
+    <div class="banner" id="updateBanner" hidden>
+        <span>🔄</span><span>Vérification des outils (yt-dlp, Deno, FFmpeg)… Les téléchargements démarreront juste après.</span>
+    </div>
+
+    <!-- ============ LIENS ============ -->
+    <div class="group">
+        <div class="label-row">
+            <label for="url">Liens <span class="soft">(un par ligne — ou glissez-les ici)</span></label>
+            <button class="link-btn" type="button" id="pasteBtn">📋 Coller</button>
         </div>
+        <textarea id="url" rows="4" spellcheck="false" placeholder="https://www.youtube.com/watch?v=…&#10;https://www.youtube.com/playlist?list=…"></textarea>
+        <ul class="plan" id="plan"></ul>
+    </div>
 
-        <div class="group">
-            <label for="quality">Profil de qualité</label>
-            <select id="quality" onchange="generate()">
-                <optgroup label="Recommandé">
-                    <option value="maxcompat">🛡️ Compatibilité maximale — H.264 · AAC · MP4 (lit partout)</option>
-                </optgroup>
-                <optgroup label="Haute résolution">
-                    <option value="best">🌟 Qualité ultime — sans limite (4K / 8K)</option>
-                    <option value="2160">📺 4K — max 2160p</option>
-                    <option value="1440">🖥️ 2K — max 1440p</option>
-                    <option value="1080">📱 Full HD — 1080p</option>
-                </optgroup>
-                <optgroup label="VJ — Resolume / Alley">
-                    <option value="hap">🎛️ HAP (.mov)</option>
-                    <option value="hapq">🎛️ HAP Q — qualité max (.mov)</option>
-                </optgroup>
-                <optgroup label="Audio">
-                    <option value="mp3">🎵 MP3 — audio seul, qualité max</option>
-                </optgroup>
-                <optgroup label="Images">
-                    <option value="frames">🎞️ Frames — dossier PNG (toutes les images)</option>
-                </optgroup>
-            </select>
-            <div class="hint" id="qualityHint"></div>
+    <div class="group">
+        <label for="quality">Profil de qualité</label>
+        <select id="quality">
+            <optgroup label="Recommandé">
+                <option value="maxcompat">🛡️ Compatibilité maximale — H.264 · AAC · MP4 (lit partout)</option>
+            </optgroup>
+            <optgroup label="Haute résolution">
+                <option value="best">🌟 Qualité ultime — sans limite (4K / 8K)</option>
+                <option value="2160">📺 4K — max 2160p</option>
+                <option value="1440">🖥️ 2K — max 1440p</option>
+                <option value="1080">📱 Full HD — 1080p</option>
+            </optgroup>
+            <optgroup label="VJ — Resolume / Alley">
+                <option value="hap">🎛️ HAP (.mov)</option>
+                <option value="hapq">🎛️ HAP Q — qualité max (.mov)</option>
+            </optgroup>
+            <optgroup label="Audio">
+                <option value="mp3">🎵 MP3 — audio seul, qualité max</option>
+            </optgroup>
+            <optgroup label="Images">
+                <option value="frames">🎞️ Frames — dossier PNG (toutes les images)</option>
+            </optgroup>
+        </select>
+        <div class="hint" id="qualityHint"></div>
+    </div>
+
+    <!-- ============ DESTINATION ============ -->
+    <div class="group">
+        <label for="dest">Dossier de destination</label>
+        <div class="inline">
+            <input type="text" id="dest" spellcheck="false" placeholder="D:\Vidéos">
+            <button class="btn" type="button" id="pickBtn">📁 Choisir…</button>
+            <button class="btn" type="button" id="openDestBtn" title="Ouvrir dans l'Explorateur">↗</button>
         </div>
+        <div class="hint">Mémorisé pour les prochaines fois. <button class="link-btn" type="button" id="resetDestBtn">Revenir au dossier par défaut</button></div>
+    </div>
 
-        <div class="group">
-            <label class="checkbox-card">
-                <input type="checkbox" id="playlist" onchange="generate()">
-                <span>📚 Télécharger la playlist entière</span>
-            </label>
+    <div class="group checks">
+        <label class="checkbox-card">
+            <input type="checkbox" id="groupBatch">
+            <span>📦 Ranger les liens multiples dans un sous-dossier à part</span>
+        </label>
+        <div class="batch-name" id="batchNameWrap">
+            <input type="text" id="batchName" placeholder="Nom du sous-dossier (par défaut : Lot date heure)">
         </div>
-    </section>
+        <label class="checkbox-card">
+            <input type="checkbox" id="playlist">
+            <span>📚 Lien vidéo + playlist (<code>watch?v=…&amp;list=…</code>) : prendre la playlist entière</span>
+        </label>
+        <div class="hint">Les liens de playlist ou de chaîne vont <b>automatiquement</b> dans un dossier au nom de la playlist, numérotés dans l'ordre.</div>
+    </div>
 
-    <!-- ============ ADVANCED (shared) ============ -->
+    <!-- ============ AVANCÉ ============ -->
     <details>
         <summary>Options avancées</summary>
         <div class="inner">
             <label class="checkbox-card" style="margin-bottom:8px">
-                <input type="checkbox" id="cookies" onchange="generate()" checked>
+                <input type="checkbox" id="cookies">
                 <span>🍪 Cookies navigateur — nécessaire depuis sept. 2026 (403 / bot / playlist privée)</span>
             </label>
             <label for="cookiesBrowser">Navigateur des cookies</label>
-            <select id="cookiesBrowser" onchange="generate()" style="margin-bottom:12px">
+            <select id="cookiesBrowser" style="margin-bottom:12px">
                 <option value="firefox">Firefox (recommandé)</option>
                 <option value="chrome">Chrome</option>
                 <option value="edge">Edge</option>
@@ -240,52 +392,58 @@
                 <option value="opera">Opera</option>
                 <option value="vivaldi">Vivaldi</option>
             </select>
-            <div class="hint">Utilise les cookies du navigateur où vous êtes connecté à YouTube. <b>À laisser coché</b> : sans cookies, YouTube ne renvoie plus que des flux DRM ou un 403. Fermez les onglets YouTube inutiles pour éviter que le cookie soit reverrouillé. <b>Firefox est le choix fiable sous Windows</b> — Chrome, Edge et Brave chiffrent leurs cookies (App-Bound Encryption) et ne sont plus lisibles par yt-dlp.</div>
-            <label for="ffmpeg" style="margin-top:4px">Chemin vers FFmpeg <span class="soft">(facultatif)</span></label>
-            <input type="text" id="ffmpeg" placeholder="Laissez vide — FFmpeg est déjà inclus" oninput="generate()">
-            <div class="hint">Inutile en temps normal : <code>launch</code> ajoute déjà FFmpeg au PATH. À renseigner seulement si vous utilisez un FFmpeg externe.</div>
+            <div class="hint">Utilise les cookies du navigateur où vous êtes connecté à YouTube. <b>À laisser coché</b> : sans cookies, YouTube ne renvoie plus que des flux DRM ou un 403. <b>Firefox est le choix fiable sous Windows</b> — Chrome, Edge et Brave chiffrent leurs cookies (App-Bound Encryption) et ne sont plus lisibles par yt-dlp.</div>
+
+            <label for="ffmpeg" style="margin-top:14px">Chemin vers FFmpeg <span class="soft">(facultatif)</span></label>
+            <input type="text" id="ffmpeg" spellcheck="false" placeholder="Laissez vide — FFmpeg est déjà inclus">
+
+            <label style="margin-top:16px">Envoyer un lien sans le copier</label>
+            <div class="hint" style="margin-top:0">Glissez ce bouton dans votre barre de favoris. Sur une page YouTube, cliquez dessus : le lien arrive directement ici.</div>
+            <a class="bookmarklet" id="bookmarklet" href="#" onclick="return false">⬇ yt-dlp Studio</a>
+            <label class="checkbox-card" style="margin-top:8px">
+                <input type="checkbox" id="autoStart">
+                <span>⚡ Télécharger immédiatement les liens envoyés par le favori</span>
+            </label>
+
+            <div class="label-row" style="margin-top:16px">
+                <label>Commande équivalente <span class="soft">(mode manuel, terminal.bat)</span></label>
+                <button class="link-btn" type="button" id="copyCmdBtn">Copier</button>
+            </div>
+            <div class="result-box" id="output">—</div>
         </div>
     </details>
 
-    <!-- ============ OUTPUT (shared) ============ -->
-    <div class="out-wrap">
-        <label>Commande à copier</label>
-        <div class="result-box placeholder" id="output">Renseignez les champs ci-dessus…</div>
-    </div>
-
-    <div class="info"><span>ℹ️</span><span id="infoText">Copiez la commande complète ci-dessus, collez-la dans le Terminal (clic droit), Entrée. Ne collez pas seulement l’URL — cmd coupe les <code>&amp;</code> YouTube.</span></div>
-
-    <button class="copy-btn" id="copyBtn" onclick="copyCommand()" disabled>Copier la commande</button>
+    <button class="go-btn" id="goBtn" type="button" disabled>⬇ Télécharger<span class="kbd">Ctrl + Entrée</span></button>
 </div>
+
+<!-- ============ FILE D'ATTENTE ============ -->
+<div class="card" id="queueCard">
+    <div class="queue-head">
+        <h2>File d'attente</h2>
+        <button class="btn small" type="button" id="clearBtn">Effacer les terminés</button>
+    </div>
+    <div class="jobs" id="jobs"><div class="empty">Aucun téléchargement pour l'instant.</div></div>
+</div>
+
+<div class="footer">
+    <button class="link-btn" type="button" id="quitBtn" style="color:var(--faint)">Arrêter le serveur</button>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
     "use strict";
 
     /* =========================================================================
-       SÉCURITÉ — Le but de cet outil est de produire une commande que l'utilisateur
-       colle dans un terminal. La menace principale est l'injection shell : une
-       entrée piégée pourrait faire exécuter du code arbitraire au moment du collage.
-
-       À l'INTÉRIEUR de guillemets doubles, bash/zsh interprètent ENCORE  $(...),
-       `...` (backticks), $VAR et \ . Une simple suppression des guillemets ne
-       suffit donc pas. On retire ici, selon le contexte, TOUS les métacaractères
-       réellement dangereux — aucun n'est légitime dans une URL ou un chemin
-       correctement formé, donc on ne casse pas les entrées valides.
+       Cette page parle au serveur local server.ps1 (lancé par launch.bat).
+       Le serveur construit lui-même les arguments yt-dlp à partir d'options en
+       liste blanche : la page n'envoie jamais de commande brute. Chaque appel
+       porte le jeton injecté dans la balise meta ci-dessus.
        ========================================================================= */
 
-    // URL : on supprime espaces, guillemets, backtick, $, \, et < > | .
-    // Aucun de ces caractères n'apparaît dans une URL valide non encodée.
-    function cleanUrl(s) {
-        return s.replace(/[\s"'`$\\<>|]/g, "");
-    }
-
-    // Chemin de fichier/dossier : on garde / et \ (séparateurs), on retire les
-    // métacaractères d'exécution ($ ` " ') et les retours/échappements de fin.
-    function cleanPath(s) {
-        return s.replace(/["'`$\r\n\t]/g, "").replace(/\\+$/, "").trim();
-    }
-
-    let lastCommand = "";
+    const TOKEN = document.querySelector('meta[name="studio-token"]').content;
+    const SERVED = /^https?:$/.test(location.protocol) && /^[0-9a-f]{32}$/.test(TOKEN);
+    const $ = id => document.getElementById(id);
 
     const QUALITY_HINTS = {
         maxcompat: "Sélectionne le flux H.264 + AAC le plus universel (≤ 1080p). Idéal montage, mobile, lecteurs anciens.",
@@ -296,156 +454,401 @@
         hap: "Ré-encode en codec HAP (.mov), lu nativement par Resolume / Alley.",
         hapq: "HAP Q : qualité maximale (~2× plus lourd). Pour rendus VJ exigeants.",
         mp3: "Extrait uniquement l'audio en MP3, qualité VBR maximale.",
-        frames: "Télécharge en H.264 ≤1080p puis extrait CHAQUE frame en PNG dans Téléchargements/<titre>/. Lourde (ex. 3 min à 30 fps ≈ 5400 images)."
+        frames: "Télécharge en H.264 ≤1080p puis extrait CHAQUE frame en PNG dans <destination>/<titre>/. Lourd (ex. 3 min à 30 fps ≈ 5400 images)."
     };
 
-    function setOutput(text, isPlaceholder) {
-        const out = document.getElementById("output");
-        out.textContent = text;
-        out.classList.toggle("placeholder", !!isPlaceholder);
-        const btn = document.getElementById("copyBtn");
-        btn.disabled = !!isPlaceholder;
-        lastCommand = isPlaceholder ? "" : text;
+    const STATUS = {
+        queued: "En attente", running: "En cours", done: "Terminé",
+        partial: "Terminé avec erreurs", error: "Échec", canceled: "Annulé"
+    };
+    const KIND_ICON = { single: "🎞️", batch: "📦", playlist: "📚" };
+
+    let defaultDest = "";
+    let lastPlan = null;
+    let online = false;
+    const openLogs = new Set();
+
+    /* ------------------------------ utilitaires ------------------------------ */
+    function store(key, value) {
+        try { if (value === undefined) return localStorage.getItem(key); localStorage.setItem(key, value); } catch (e) { return null; }
     }
 
-    function ffmpegLocationArg() {
-        const p = cleanPath(document.getElementById("ffmpeg").value);
-        return p ? ` --ffmpeg-location "${p}"` : "";
+    function debounce(fn, ms) {
+        let t;
+        return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
     }
 
-    // Anti-403 YouTube : Deno pour les challenges JS, clients fiables, retries,
-    // et evite AV1 (format 399) qui se fait souvent couper en plein download.
-    //
-    // Sept. 2026 : `default` retombe sur visionos + android_vr, or ces deux clients
-    // exigent desormais un GVS PO token — on n'obtient plus que le format 18 (360p),
-    // qui se prend lui-meme un 403 (yt-dlp#17348, yt-dlp#17456). Le client `tv` est
-    // le seul qui marche encore sans PO token, mais il renvoie des flux DRM tant
-    // qu'on ne lui passe pas de cookies : d'ou la case Cookies cochee par defaut.
-    function youtubeRobustArgs() {
-        let a = ` --js-runtimes deno`;
-        a += ` --extractor-args "youtube:player_client=tv,default,-android_vr,-visionos"`;
-        a += ` --retries 10 --fragment-retries 10 --retry-sleep "fragment:linear=1:8"`;
-        if (document.getElementById("cookies").checked) {
-            const br = document.getElementById("cookiesBrowser").value;
-            a += ` --cookies-from-browser ${br}`;
+    // Création DOM sûre : tout le texte passe par textContent (titres YouTube = données non fiables).
+    function el(tag, props, ...children) {
+        const n = document.createElement(tag);
+        for (const [k, v] of Object.entries(props || {})) {
+            if (k === "class") n.className = v;
+            else if (k === "text") n.textContent = v;
+            else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+            else n.setAttribute(k, v);
         }
-        return a;
+        for (const c of children) if (c != null) n.append(c);
+        return n;
     }
 
-    // Prefere H.264, puis VP9 — pas AV1 (souvent 403 CDN).
-    function formatAvoidAv1(heightCap) {
-        if (heightCap === "best") {
-            return `bv*[vcodec^=avc1]+ba[acodec^=mp4a]/bv*[vcodec!=av01]+ba/b`;
-        }
-        return `bv*[vcodec^=avc1][height<=${heightCap}]+ba[acodec^=mp4a]/bv*[vcodec!=av01][height<=${heightCap}]+ba/b[height<=${heightCap}]/b[height<=${heightCap}]`;
+    let toastTimer;
+    function toast(msg, isErr) {
+        const t = $("toast");
+        t.textContent = msg;
+        t.classList.toggle("err", !!isErr);
+        t.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove("show"), 3200);
     }
 
-    /* ----------------------------- DOWNLOAD ----------------------------- */
-    function generate() {
-        const quality = document.getElementById("quality").value;
-        document.getElementById("qualityHint").textContent = QUALITY_HINTS[quality] || "";
-
-        const rawLines = document.getElementById("url").value
-            .split("\n").map(l => l.trim()).filter(Boolean);
-
-        const urls = [];
-        let rejected = 0;
-        for (const line of rawLines) {
-            let parsed;
-            try { parsed = new URL(line); } catch { rejected++; continue; }
-            if (parsed.protocol !== "http:" && parsed.protocol !== "https:") { rejected++; continue; }
-            const safe = cleanUrl(line);
-            if (safe) urls.push(safe);
+    async function api(path, body) {
+        const opts = { headers: { "X-Studio-Token": TOKEN }, cache: "no-store" };
+        if (body !== undefined) {
+            opts.method = "POST";
+            opts.headers["Content-Type"] = "application/json";
+            opts.body = JSON.stringify(body);
         }
+        const res = await fetch(path, opts);
+        let data = {};
+        try { data = await res.json(); } catch (e) { /* réponse vide */ }
+        if (!res.ok) throw new Error(data.error || ("HTTP " + res.status));
+        return data;
+    }
 
-        if (urls.length === 0) {
-            setOutput(rejected > 0
-                ? "Aucune URL valide. Collez uniquement des liens http(s)."
-                : "Collez au moins une URL ci-dessus…", true);
+    function fmtSpeed(bps) {
+        if (!(bps > 0)) return "";
+        const units = ["o/s", "Ko/s", "Mo/s", "Go/s"];
+        let i = 0;
+        while (bps >= 1024 && i < units.length - 1) { bps /= 1024; i++; }
+        return bps.toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " " + units[i];
+    }
+
+    function fmtEta(s) {
+        if (!(s >= 0)) return "";
+        const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+        const pad = n => String(n).padStart(2, "0");
+        return h ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
+    }
+
+    /* ------------------------------ formulaire ------------------------------ */
+    function urlLines() {
+        return $("url").value.split("\n").map(l => l.trim()).filter(Boolean);
+    }
+
+    function options() {
+        return {
+            profile: $("quality").value,
+            dest: $("dest").value.trim(),
+            playlist: $("playlist").checked,
+            groupBatch: $("groupBatch").checked,
+            cookies: $("cookies").checked,
+            browser: $("cookiesBrowser").value,
+            ffmpeg: $("ffmpeg").value.trim()
+        };
+    }
+
+    function applySettings(s) {
+        $("dest").value = s.dest || "";
+        $("quality").value = s.profile || "maxcompat";
+        $("playlist").checked = !!s.playlist;
+        $("groupBatch").checked = s.groupBatch !== false;
+        $("cookies").checked = s.cookies !== false;
+        $("cookiesBrowser").value = s.browser || "firefox";
+        $("ffmpeg").value = s.ffmpeg || "";
+        onFormChange(false);
+    }
+
+    const saveSettings = debounce(() => {
+        if (!online) return;
+        api("/api/settings", options()).catch(() => {});
+    }, 500);
+
+    function onFormChange(save) {
+        $("qualityHint").textContent = QUALITY_HINTS[$("quality").value] || "";
+        $("batchNameWrap").hidden = !$("groupBatch").checked;
+        store("ytdlp-draft", $("url").value);
+        if (save) saveSettings();
+        refreshPlan();
+    }
+
+    const refreshPlan = debounce(async () => {
+        const urls = urlLines();
+        const plan = $("plan");
+        if (!online || urls.length === 0) {
+            plan.replaceChildren();
+            $("output").textContent = "—";
+            lastPlan = null;
+            $("goBtn").disabled = true;
             return;
         }
-
-        let cmd = "yt-dlp" + ffmpegLocationArg() + youtubeRobustArgs();
-        const folder = "Téléchargements";
-
-        if (quality === "frames") {
-            // Video ≤1080p (H.264 de preference) puis extraction PNG via extract-frames.bat
-            cmd += ` -f "${formatAvoidAv1(1080)}"`;
-            cmd += ` --merge-output-format mp4`;
-            if (document.getElementById("playlist").checked) {
-                cmd += ` --yes-playlist -o "${folder}/%(playlist_title)s/%(playlist_index)s - %(title)s/%(title)s.%(ext)s"`;
-            } else {
-                cmd += ` --no-playlist -o "${folder}/%(title)s/%(title)s.%(ext)s"`;
+        try {
+            const p = await api("/api/preview", { ...options(), urls, batchName: $("batchName").value });
+            lastPlan = p;
+            const items = [];
+            if (p.error) items.push(el("li", {}, el("span", { class: "bad", text: "⚠️ " + p.error })));
+            for (const j of p.jobs) {
+                const what = j.kind === "playlist" ? "📚 Playlist"
+                    : j.kind === "batch" ? `📦 ${j.count} liens`
+                    : "🎞️ Vidéo";
+                const where = j.kind === "playlist" ? j.dir.replace(/[\\/]$/, "") + "\\<nom de la playlist>\\" : j.dir;
+                items.push(el("li", {}, el("span", { text: what }), el("span", { class: "arrow", text: "→" }),
+                    el("span", { class: "path", text: where })));
             }
-            cmd += ` --exec "extract-frames.bat %(filepath)q"`;
-            urls.forEach(u => { cmd += ` "${u}"`; });
-            setOutput(cmd, false);
-            return;
+            if (p.rejected && p.rejected.length) {
+                items.push(el("li", {}, el("span", { class: "bad", text: `⚠️ ${p.rejected.length} ligne(s) ignorée(s) : liens http(s) uniquement` })));
+            }
+            plan.replaceChildren(...items);
+            $("output").textContent = p.jobs.length ? p.jobs.map(j => j.command).join("\n\n") : "—";
+            $("goBtn").disabled = !!p.error || p.jobs.length === 0;
+        } catch (e) {
+            plan.replaceChildren(el("li", {}, el("span", { class: "bad", text: "⚠️ " + e.message })));
+            $("goBtn").disabled = true;
         }
+    }, 250);
 
-        if (quality === "mp3") {
-            cmd += ` -f bestaudio -x --audio-format mp3 --audio-quality 0`;
-        } else if (quality === "hap" || quality === "hapq") {
-            const fmt = quality === "hapq" ? "hap_q" : "hap";
-            cmd += ` -f "${formatAvoidAv1("best")}" --recode-video mov`;
-            cmd += ` --postprocessor-args "VideoConvertor:-c:v hap -format ${fmt} -c:a pcm_s16le"`;
-        } else if (quality === "maxcompat") {
-            // Flux H.264 (avc1) + AAC (mp4a) jusqu'à 1080p — le combo universel.
-            cmd += ` -f "bv*[vcodec^=avc1][height<=1080]+ba[acodec^=mp4a]/b[ext=mp4][height<=1080]/bv*[height<=1080][vcodec!=av01]+ba/b[height<=1080]/b"`;
-            cmd += ` --merge-output-format mp4`;
-        } else {
-            const fmt = (quality === "best")
-                ? formatAvoidAv1("best")
-                : formatAvoidAv1(quality);
-            cmd += ` -f "${fmt}" --merge-output-format mp4`;
+    function addUrls(text) {
+        const found = String(text || "").split(/\s+/).filter(s => /^https?:\/\//i.test(s));
+        if (!found.length) return 0;
+        const existing = new Set(urlLines());
+        const fresh = found.filter(u => !existing.has(u));
+        if (fresh.length) {
+            const cur = $("url").value.replace(/\s+$/, "");
+            $("url").value = (cur ? cur + "\n" : "") + fresh.join("\n") + "\n";
+            onFormChange(false);
         }
-
-        if (document.getElementById("playlist").checked) {
-            cmd += ` --yes-playlist -o "${folder}/%(playlist_title)s/%(playlist_index)s - %(title)s.%(ext)s"`;
-        } else {
-            cmd += ` --no-playlist -o "${folder}/%(title)s.%(ext)s"`;
-        }
-
-        urls.forEach(u => { cmd += ` "${u}"`; });
-        setOutput(cmd, false);
+        return fresh.length;
     }
 
-    /* ------------------------------ COPY ------------------------------ */
-    function flashCopied() {
-        const btn = document.getElementById("copyBtn");
-        const original = "Copier la commande";
-        btn.textContent = "✅ Copié !";
-        btn.style.background = "linear-gradient(135deg, #34d399, #059669)";
-        setTimeout(() => { btn.textContent = original; btn.style.background = ""; }, 1800);
+    /* ------------------------------ actions ------------------------------ */
+    async function startDownload() {
+        const urls = urlLines();
+        if (!urls.length || !online) return;
+        $("goBtn").disabled = true;
+        try {
+            const r = await api("/api/download", { ...options(), urls, batchName: $("batchName").value });
+            $("url").value = "";
+            $("batchName").value = "";
+            onFormChange(false);
+            toast(`✅ ${r.ids.length > 1 ? r.ids.length + " téléchargements ajoutés" : "Téléchargement ajouté"} à la file`);
+            poll();
+        } catch (e) {
+            toast("⚠️ " + e.message, true);
+            refreshPlan();
+        }
     }
 
-    // Repli execCommand : fonctionne même ouvert en local (file://), sans serveur.
+    async function pickFolder() {
+        $("pickBtn").disabled = true;
+        toast("📁 Choisissez le dossier dans la fenêtre Windows qui vient de s'ouvrir…");
+        try {
+            const r = await api("/api/pick-folder", { start: $("dest").value.trim() });
+            if (r.path) {
+                $("dest").value = r.path;
+                onFormChange(true);
+                toast("📁 " + r.path);
+            } else {
+                $("toast").classList.remove("show");
+            }
+        } catch (e) {
+            toast("⚠️ " + e.message + " — tapez le chemin à la main.", true);
+        } finally {
+            $("pickBtn").disabled = false;
+        }
+    }
+
+    async function openPath(path) {
+        try { await api("/api/open", { path }); } catch (e) { toast("⚠️ " + e.message, true); }
+    }
+
+    function copyText(text) {
+        const done = () => toast("✅ Commande copiée");
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done, () => legacyCopy(text) && done());
+        } else if (legacyCopy(text)) done();
+    }
     function legacyCopy(text) {
-        const ta = document.createElement("textarea");
+        const ta = el("textarea", { style: "position:fixed;opacity:0" });
         ta.value = text;
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
-        document.body.appendChild(ta);
+        document.body.append(ta);
         ta.select();
         let ok = false;
         try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
-        document.body.removeChild(ta);
+        ta.remove();
         return ok;
     }
 
-    function copyCommand() {
-        if (!lastCommand) return;
-        const text = lastCommand;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(flashCopied, () => {
-                if (legacyCopy(text)) flashCopied();
-            });
-        } else if (legacyCopy(text)) {
-            flashCopied();
+    /* ------------------------------ file d'attente ------------------------------ */
+    function renderJobs(jobs) {
+        const box = $("jobs");
+        if (!jobs.length) {
+            box.replaceChildren(el("div", { class: "empty", text: "Aucun téléchargement pour l'instant." }));
+            return;
+        }
+        const cards = jobs.slice().reverse().map(j => {
+            const active = j.status === "running" || j.status === "queued";
+            const title = j.title || j.label;
+
+            const bar = el("div", { class: "bar" }, el("i"));
+            if (j.status === "running" && !(j.percent >= 0)) bar.classList.add("indet");
+            else {
+                const pct = j.status === "done" ? 100 : Math.max(0, j.percent || 0);
+                bar.firstChild.style.width = pct + "%";
+                if (j.status === "done") bar.classList.add("done");
+                if (j.status === "error") bar.classList.add("error");
+            }
+
+            const meta = [];
+            if (j.itemCount > 1 || j.kind === "playlist") {
+                meta.push(`Élément ${j.itemIndex || 0}${j.itemCount ? "/" + j.itemCount : ""}`);
+            }
+            if (j.status === "running" && j.percent >= 0) meta.push(j.percent.toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " %");
+            if (j.status === "running" && fmtSpeed(j.speed)) meta.push(fmtSpeed(j.speed));
+            if (j.status === "running" && fmtEta(j.eta)) meta.push("reste " + fmtEta(j.eta));
+            if (j.filesDone) meta.push(`${j.filesDone} fichier${j.filesDone > 1 ? "s" : ""}`);
+            if (j.status === "queued") meta.push("En attente du téléchargement précédent…");
+
+            const actions = el("div", { class: "job-actions" });
+            if (active) actions.append(el("button", { class: "btn small", type: "button", text: "✕ Annuler",
+                onclick: () => api("/api/cancel", { id: j.id }).then(poll).catch(e => toast("⚠️ " + e.message, true)) }));
+            actions.append(el("button", { class: "btn small", type: "button", text: "📂 Ouvrir le dossier",
+                onclick: () => openPath(j.kind !== "batch" && j.filesDone === 1 && j.lastFile ? j.lastFile : j.dir) }));
+            if (j.log && j.log.length) actions.append(el("button", { class: "btn small", type: "button",
+                text: openLogs.has(j.id) ? "Masquer le journal" : "Journal",
+                onclick: () => { openLogs.has(j.id) ? openLogs.delete(j.id) : openLogs.add(j.id); poll(); } }));
+
+            const card = el("div", { class: "job" },
+                el("div", { class: "job-top" },
+                    el("span", { class: "job-icon", text: KIND_ICON[j.kind] || "🎞️" }),
+                    el("div", { class: "job-main" },
+                        el("div", { class: "job-title", text: title, title }),
+                        el("div", { class: "job-dir", text: j.dir, title: j.dir })),
+                    el("span", { class: "chip " + j.status, text: STATUS[j.status] || j.status })),
+                bar,
+                meta.length ? el("div", { class: "job-meta" }, ...meta.map(m => el("span", { text: m }))) : null,
+                (j.lastError && !active && j.status !== "done") ? el("div", { class: "job-err", text: j.lastError }) : null,
+                actions);
+
+            if (openLogs.has(j.id) && j.log) {
+                const pre = el("div", { class: "job-log", text: j.log.join("\n") });
+                card.append(pre);
+                requestAnimationFrame(() => { pre.scrollTop = pre.scrollHeight; });
+            }
+            return card;
+        });
+        box.replaceChildren(...cards);
+    }
+
+    let pollTimer;
+    async function poll() {
+        clearTimeout(pollTimer);
+        let delay = 3000;
+        try {
+            const st = await api("/api/state");
+            const wasOnline = online;
+            online = true;
+            defaultDest = st.defaultDest;
+            if (!wasOnline) { applySettings(st.settings); handleIncomingUrl(); }
+            const active = st.jobs.some(j => j.status === "running" || j.status === "queued");
+            $("updateBanner").hidden = !st.updating;
+            setPill(st.updating ? "busy" : "ok", st.updating ? "Mise à jour des outils…" : active ? "Téléchargement…" : "Prêt");
+            renderJobs(st.jobs);
+            if (active || st.updating) delay = 1000;
+        } catch (e) {
+            online = false;
+            setPill("off", "Serveur arrêté — relancez yt-dlp Studio");
+            $("goBtn").disabled = true;
+        }
+        pollTimer = setTimeout(poll, delay);
+    }
+
+    function setPill(cls, text) {
+        const p = $("statusPill");
+        p.className = "pill " + cls;
+        p.textContent = text;
+    }
+
+    // Lien reçu via le favori : /?url=https://…
+    function handleIncomingUrl() {
+        const params = new URLSearchParams(location.search);
+        const incoming = params.get("url");
+        if (!incoming) return;
+        history.replaceState(null, "", location.pathname);
+        if (!addUrls(incoming)) return;
+        if (store("ytdlp-autostart") === "1") {
+            setTimeout(startDownload, 400);
+        } else {
+            toast("🔗 Lien reçu — cliquez sur Télécharger");
+            $("goBtn").focus();
         }
     }
 
-    document.addEventListener("DOMContentLoaded", generate);
+    /* ------------------------------ init ------------------------------ */
+    function init() {
+        window.name = "ytdlpstudio"; // le favori réutilise cet onglet
+
+        const draft = store("ytdlp-draft");
+        if (draft) $("url").value = draft;
+        $("autoStart").checked = store("ytdlp-autostart") === "1";
+        $("qualityHint").textContent = QUALITY_HINTS[$("quality").value];
+
+        if (!SERVED) {
+            $("fileBanner").hidden = false;
+            $("queueCard").hidden = true;
+            $("statusPill").hidden = true;
+            document.querySelector(".footer").hidden = true;
+            return;
+        }
+
+        const origin = location.origin;
+        $("bookmarklet").href = `javascript:(function(){window.open('${origin}/?url='+encodeURIComponent(location.href),'ytdlpstudio')})()`;
+
+        $("url").addEventListener("input", () => onFormChange(false));
+        $("url").addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); startDownload(); } });
+        $("batchName").addEventListener("input", () => onFormChange(false));
+        for (const id of ["quality", "playlist", "groupBatch", "cookies", "cookiesBrowser"]) {
+            $(id).addEventListener("change", () => onFormChange(true));
+        }
+        for (const id of ["dest", "ffmpeg"]) $(id).addEventListener("input", () => onFormChange(true));
+
+        $("autoStart").addEventListener("change", e => store("ytdlp-autostart", e.target.checked ? "1" : "0"));
+        $("goBtn").addEventListener("click", startDownload);
+        $("pickBtn").addEventListener("click", pickFolder);
+        $("openDestBtn").addEventListener("click", () => openPath($("dest").value.trim()));
+        $("resetDestBtn").addEventListener("click", () => { $("dest").value = defaultDest; onFormChange(true); });
+        $("copyCmdBtn").addEventListener("click", () => { if (lastPlan && lastPlan.jobs.length) copyText($("output").textContent); });
+        $("clearBtn").addEventListener("click", () => api("/api/clear", {}).then(poll).catch(() => {}));
+        $("quitBtn").addEventListener("click", async () => {
+            if (!confirm("Arrêter le serveur ? Les téléchargements en cours seront annulés.")) return;
+            try { await api("/api/quit", {}); } catch (e) { /* déjà arrêté */ }
+            poll();
+        });
+
+        $("pasteBtn").addEventListener("click", async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (!addUrls(text)) toast("Le presse-papiers ne contient pas de lien.", true);
+            } catch (e) {
+                $("url").focus();
+                toast("Faites Ctrl + V dans le champ.");
+            }
+        });
+
+        // Glisser-déposer un lien (depuis la barre d'adresse, un onglet ou une page)
+        const card = $("mainCard");
+        card.addEventListener("dragover", e => { e.preventDefault(); card.classList.add("drop"); });
+        card.addEventListener("dragleave", e => { if (!card.contains(e.relatedTarget)) card.classList.remove("drop"); });
+        card.addEventListener("drop", e => {
+            e.preventDefault();
+            card.classList.remove("drop");
+            const dt = e.dataTransfer;
+            const text = dt.getData("text/uri-list") || dt.getData("text/plain");
+            if (!addUrls(text)) toast("Aucun lien http(s) détecté.", true);
+        });
+
+        poll();
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
 </script>
 
 </body>

@@ -12,5 +12,8 @@ Telechargements/
 # Outillage
 graphify-out/
 
+# Reglages locaux (dossier de destination, profil...)
+settings.json
+
 # Sauvegardes locales
 *.bak

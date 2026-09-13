@@ -1,13 +1,19 @@
-# Ouvre index.html dans un vrai navigateur (pas l'editeur associe aux .html).
-# Firefox est prioritaire : l'app genere des commandes avec
-# --cookies-from-browser firefox, autant que l'UI et les cookies soient au meme endroit.
+# Ouvre l'interface dans un vrai navigateur (pas l'editeur associe aux .html).
+# Firefox est prioritaire : l'app utilise --cookies-from-browser firefox,
+# autant que l'UI et les cookies soient au meme endroit.
+# -Url : adresse du serveur local (server.ps1). Sans -Url : index.html en fichier.
+param([string]$Url)
 $ErrorActionPreference = 'SilentlyContinue'
-$page = Join-Path $PSScriptRoot 'index.html'
-if (-not (Test-Path -LiteralPath $page)) {
-    Write-Host "index.html introuvable."
-    exit 1
+if ($Url) {
+    $url = $Url
+} else {
+    $page = Join-Path $PSScriptRoot 'index.html'
+    if (-not (Test-Path -LiteralPath $page)) {
+        Write-Host "index.html introuvable."
+        exit 1
+    }
+    $url = ([Uri]$page).AbsoluteUri
 }
-$url = ([Uri]$page).AbsoluteUri
 
 $exe = $null
 

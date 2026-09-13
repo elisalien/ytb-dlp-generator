@@ -8,11 +8,10 @@ set "PATH=%~dp0bin;%~dp0;%PATH%"
 if not exist "bin\yt-dlp.exe" goto :missing
 if not exist "bin\ffmpeg.exe"  goto :missing
 
-REM Interface dans un vrai navigateur (script PS dedie = quoting fiable)
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0open-ui.ps1"
-
-REM Terminal pret a coller la commande (/k garde la fenetre ouverte apres le setup)
-start "yt-dlp Studio" cmd /k "%~dp0terminal.bat"
+REM Serveur local (fenetre reduite) : ouvre l'interface dans le navigateur et
+REM lance les telechargements directement. S'il tourne deja, rouvre juste l'interface.
+REM Mode manuel (copier/coller une commande) : terminal.bat
+start "yt-dlp Studio" /min powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0server.ps1"
 
 exit /b 0
 

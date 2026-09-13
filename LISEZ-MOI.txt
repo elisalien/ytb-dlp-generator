@@ -26,21 +26,34 @@ UN TELECHARGEUR VIDEO 4K SIMPLE, AVEC UNE INTERFACE GRAPHIQUE.
    Pour l'epingler a la barre des taches : clic droit sur le raccourci
    -> "Epingler a la barre des taches".
    -> L'interface s'ouvre dans votre navigateur.
-   -> Une fenetre noire "Terminal" s'ouvre aussi : c'est normal,
-      c'est la que les videos se telechargent.
+   -> Une fenetre "yt-dlp Studio - serveur" s'ouvre REDUITE dans la
+      barre des taches : c'est elle qui telecharge. Laissez-la ouverte
+      (la fermer arrete les telechargements).
 
-2. Dans l'interface, onglet "Telecharger" :
-   - Collez vos liens YouTube (un par ligne)
+2. Dans l'interface :
+   - Collez vos liens (un par ligne), bouton "Coller", ou GLISSEZ
+     un lien / un onglet directement sur la fenetre.
    - Choisissez un profil (par defaut : Compatibilite maximale)
      Profil "Frames" : cree un dossier par video avec toutes les
      images PNG (frame_00001.png, ...) — attention au volume disque.
-   - Cliquez sur "Copier la commande"
+   - Dossier de destination : bouton "Choisir..." (memorise).
+   - Cliquez sur "Telecharger" (ou Ctrl + Entree). C'est tout :
+     la progression s'affiche dans la "File d'attente".
 
-3. Cliquez dans la fenetre noire "Terminal", faites un CLIC DROIT
-   (ce qui colle la commande), puis appuyez sur ENTREE.
+3. Rangement automatique :
+   - Un lien de playlist ou de chaine  -> dossier au nom de la playlist,
+     fichiers numerotes dans l'ordre.
+   - Plusieurs liens colles d'un coup  -> sous-dossier "Lot <date heure>"
+     (nom modifiable, option decochable).
+   - Un seul lien                      -> directement dans la destination.
 
-4. La video (ou le dossier de frames) est enregistree dans
-   le sous-dossier  Telechargements.
+4. Sans meme copier le lien : Options avancees -> glissez le bouton
+   "yt-dlp Studio" dans la barre de favoris du navigateur. Sur une page
+   YouTube, cliquez ce favori : le lien arrive dans l'interface
+   (option : telechargement immediat).
+
+Mode manuel (ancien fonctionnement) : Options avancees -> "Commande
+equivalente" -> Copier, puis collez-la dans terminal.bat.
 
 ----------------------------------------------------------------
  MISE A JOUR DES OUTILS

@@ -10,8 +10,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0update.ps1" -Auto
 
 echo/
 echo ============================================================
-echo   yt-dlp Studio
-echo   1. Dans le navigateur: Copier la commande
+echo   yt-dlp Studio - mode manuel
+echo   (launch.bat telecharge directement, sans ce terminal)
+echo   1. Options avancees: Commande equivalente, Copier
 echo   2. Ici: clic droit = coller, puis Entree
 echo   3. NE collez PAS seulement l'URL YouTube
 echo   Sortie: dossier Telechargements
